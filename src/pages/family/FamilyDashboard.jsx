@@ -309,6 +309,7 @@ const FileItem = memo(({ file, onRemove, onUpdateInfo, t }) => (
         type="button"
         className="remove-file"
         onClick={() => onRemove(file.id)}
+        aria-label={`Remove ${file.name}`}
       >
         <i className="fas fa-times"></i>
       </button>
@@ -320,6 +321,7 @@ const FileItem = memo(({ file, onRemove, onUpdateInfo, t }) => (
         <select
           value={file.category}
           onChange={(e) => onUpdateInfo(file.id, 'category', e.target.value)}
+          aria-label={`Category for ${file.name}`}
         >
           <option value="uncategorized">{t('selectCategory')}</option>
           <option value="property_damage">{t('propertyDamagePhotos')}</option>
@@ -351,13 +353,16 @@ const DocumentCard = memo(({ file, t }) => (
         onClick={() => {
           if (file.base64) {
             const newWindow = window.open();
-            if (file.type.includes('image')) {
-              newWindow.document.write(`<img src="${file.base64}" style="max-width:100%;height:auto;" />`);
-            } else {
-              newWindow.location.href = file.base64;
+            if (newWindow) {
+              if (file.type.includes('image')) {
+                newWindow.document.write(`<img src="${file.base64}" style="max-width:100%;height:auto;" alt="${file.name}" />`);
+              } else {
+                newWindow.location.href = file.base64;
+              }
             }
           }
         }}
+        aria-label={`View ${file.name}`}
       >
         {t('view')}
       </button>
@@ -369,20 +374,17 @@ const FamilyDashboard = () => {
   const { user, isAuthenticated, userType, loading, logout } = useAuth();
   const navigate = useNavigate();
   
-  // Debug: Log auth context state on render
-  useEffect(() => {
-    console.log('🔍 DEBUG: FamilyDashboard auth context:', {
-      isAuthenticated,
-      userType,
-      loading,
-      hasUser: !!user,
-      userId: user?.id,
-      userEmail: user?.email
-    });
-  }, [isAuthenticated, userType, loading, user]);
+  // State declarations
   const [activeTab, setActiveTab] = useState('overview');
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [language, setLanguage] = useState('en');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false); // Fixed: Added missing state
+  const [lastSaved, setLastSaved] = useState(null);
+  const [caseData, setCaseData] = useState(null);
+  const [caseStatus, setCaseStatus] = useState(null);
+  const [formErrors, setFormErrors] = useState({});
+  
   const [familyData, setFamilyData] = useState({
     familyName: '',
     headOfHousehold: '',
@@ -411,12 +413,18 @@ const FamilyDashboard = () => {
     emergencyContact: '',
     emergencyPhone: ''
   });
-  
-  const [formErrors, setFormErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [lastSaved, setLastSaved] = useState(null);
-  const [caseData, setCaseData] = useState(null);
-  const [caseStatus, setCaseStatus] = useState(null);
+
+  // Debug: Log auth context state on render
+  useEffect(() => {
+    console.log('🔍 DEBUG: FamilyDashboard auth context:', {
+      isAuthenticated,
+      userType,
+      loading,
+      hasUser: !!user,
+      userId: user?.id,
+      userEmail: user?.email
+    });
+  }, [isAuthenticated, userType, loading, user]);
 
   // Memoized translation function
   const t = useCallback((key) => TRANSLATIONS[language]?.[key] || key, [language]);
@@ -479,6 +487,7 @@ const FamilyDashboard = () => {
       if (!authData.isAuthenticated || !authData.token) {
         throw new Error('User is not authenticated. Please log in again.');
       }
+      
       // Only include non-empty fields to avoid validation errors
       const processedFamilyData = {};
       
@@ -698,10 +707,10 @@ const FamilyDashboard = () => {
     }
   }, [formErrors]);
 
-  // Handle file upload - optimized
+  // Handle file upload - optimized with compression
   const handleFileUpload = useCallback(async (e) => {
     const files = Array.from(e.target.files);
-    const maxSize = 10 * 1024 * 1024;
+    const maxSize = 10 * 1024 * 1024; // 10MB
     const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf', 'image/heic'];
     
     const validFiles = files.filter(file => {
@@ -716,29 +725,112 @@ const FamilyDashboard = () => {
       return true;
     });
 
-    const processedFiles = await Promise.all(validFiles.map(async (file) => {
-      const base64 = await new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.readAsDataURL(file);
-      });
+    // Function to compress image
+    const compressImage = (file, maxWidth = 1920, quality = 0.8) => {
+      return new Promise((resolve) => {
+        if (file.type === 'application/pdf') {
+          // Don't compress PDFs, just convert to base64
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.readAsDataURL(file);
+          return;
+        }
 
-      return {
-        id: Date.now() + Math.random(),
-        file: file,
-        name: file.name,
-        originalName: file.name,
-        size: file.size,
-        type: file.type,
-        uploadDate: new Date().toISOString(),
-        category: 'uncategorized',
-        description: '',
-        base64: base64,
-        checksum: btoa(file.name + file.size + file.lastModified)
-      };
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        
+        img.onload = () => {
+          // Calculate new dimensions
+          let { width, height } = img;
+          
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+          }
+          
+          // Set canvas dimensions
+          canvas.width = width;
+          canvas.height = height;
+          
+          // Draw and compress
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          // Get compressed base64
+          const compressedBase64 = canvas.toDataURL(file.type, quality);
+          resolve(compressedBase64);
+        };
+        
+        img.src = URL.createObjectURL(file);
+      });
+    };
+
+    // Process files with compression
+    const processedFiles = await Promise.all(validFiles.map(async (file) => {
+      try {
+        // Compress the image
+        const base64 = await compressImage(file);
+        
+        // Check if compressed size is still reasonable (base64 is ~33% larger than binary)
+        const estimatedSize = (base64.length * 0.75); // Rough estimate of binary size
+        
+        if (estimatedSize > 5 * 1024 * 1024) { // If still > 5MB after compression
+          // Try with lower quality
+          const recompressed = await compressImage(file, 1280, 0.6);
+          const recompressedSize = (recompressed.length * 0.75);
+          
+          if (recompressedSize > 5 * 1024 * 1024) {
+            toast.warning(`File ${file.name} is still too large after compression. Please use a smaller image.`);
+            return null;
+          }
+          
+          return {
+            id: Date.now() + Math.random(),
+            file: file,
+            name: file.name,
+            originalName: file.name,
+            size: Math.round(recompressedSize), // Use compressed size
+            type: file.type,
+            uploadDate: new Date().toISOString(),
+            category: 'uncategorized',
+            description: '',
+            base64: recompressed,
+            checksum: btoa(file.name + file.size + file.lastModified),
+            compressed: true
+          };
+        }
+
+        return {
+          id: Date.now() + Math.random(),
+          file: file,
+          name: file.name,
+          originalName: file.name,
+          size: Math.round(estimatedSize), // Use compressed size
+          type: file.type,
+          uploadDate: new Date().toISOString(),
+          category: 'uncategorized',
+          description: '',
+          base64: base64,
+          checksum: btoa(file.name + file.size + file.lastModified),
+          compressed: file.type !== 'application/pdf'
+        };
+      } catch (error) {
+        console.error('Error processing file:', file.name, error);
+        toast.error(`Failed to process file: ${file.name}`);
+        return null;
+      }
     }));
 
-    setUploadedFiles(prev => [...prev, ...processedFiles]);
+    // Filter out failed uploads
+    const successfulFiles = processedFiles.filter(file => file !== null);
+    
+    if (successfulFiles.length > 0) {
+      setUploadedFiles(prev => [...prev, ...successfulFiles]);
+      toast.success(`Successfully uploaded ${successfulFiles.length} file(s)`);
+    }
+    
+    // Clear the input so the same file can be uploaded again if needed
+    e.target.value = '';
   }, []);
 
   // Remove uploaded file - optimized
@@ -817,29 +909,56 @@ const FamilyDashboard = () => {
     }
   }, [validateForm, saveToStorage, familyData, t]);
 
+  // Save draft functionality
+  const saveDraft = useCallback(async () => {
+    if (isSaving) return;
+    
+    try {
+      await saveToStorage(familyData, 'draft');
+      toast.success(t('dataSaved'));
+    } catch (error) {
+      toast.error(error.message || t('saveError'));
+    }
+  }, [saveToStorage, familyData, t, isSaving]);
 
+  // Auto-save draft every 2 minutes
+  useEffect(() => {
+    if (activeTab === 'submit' && familyData.familyName) {
+      const autoSaveInterval = setInterval(() => {
+        saveDraft();
+      }, 120000); // 2 minutes
+
+      return () => clearInterval(autoSaveInterval);
+    }
+  }, [activeTab, familyData.familyName, saveDraft]);
+
+  // Component render functions
+  const renderEmailVerificationBanner = () => {
+    if (!user || user.emailVerified) return null;
+    
+    return (
+      <div className="email-verification-banner">
+        <div className="verification-content">
+          <i className="fas fa-envelope-open-text"></i>
+          <div className="verification-text">
+            <h3>Email Verification Required</h3>
+            <p>Please verify your email address to access all dashboard features and submit your case.</p>
+          </div>
+          <button 
+            className="verify-email-btn-primary"
+            onClick={() => navigate('/verify-email')}
+          >
+            Verify Email Now
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   // Memoized render functions for better performance
   const renderOverviewTab = useMemo(() => (
     <div className="tab-content">
-      {/* Email verification notice */}
-      {user && !user.emailVerified && (
-        <div className="email-verification-banner">
-          <div className="verification-content">
-            <i className="fas fa-envelope-open-text"></i>
-            <div className="verification-text">
-              <h3>Email Verification Required</h3>
-              <p>Please verify your email address to access all dashboard features and submit your case.</p>
-            </div>
-            <button 
-              className="verify-email-btn-primary"
-              onClick={() => navigate('/verify-email')}
-            >
-              Verify Email Now
-            </button>
-          </div>
-        </div>
-      )}
+      {renderEmailVerificationBanner()}
       
       <div className="welcome-section">
         <h2>{t('welcome')}, {familyData.familyName || user?.firstName || 'Family'}</h2>
@@ -921,7 +1040,7 @@ const FamilyDashboard = () => {
       </div>
 
       {/* Case Status Notifications */}
-      {caseStatus?.status === t('approved') && (
+      {caseStatus?.status === t('approved') && caseStatus.approvalDetails && (
         <div className="status-notification approved">
           <div className="notification-header">
             <i className="fas fa-check-circle"></i>
@@ -931,12 +1050,12 @@ const FamilyDashboard = () => {
             <p>Congratulations! Your case has been approved and is now available for funding.</p>
             <div className="approval-details">
               <div className="detail-item">
-                <strong>Final Damage Assessment:</strong> {caseStatus.approvalDetails?.finalDamagePercentage}%
+                <strong>Final Damage Assessment:</strong> {caseStatus.approvalDetails.finalDamagePercentage}%
               </div>
               <div className="detail-item">
-                <strong>Estimated Rebuild Cost:</strong> ${parseInt(caseStatus.approvalDetails?.estimatedCost || 0).toLocaleString()}
+                <strong>Estimated Rebuild Cost:</strong> ${parseInt(caseStatus.approvalDetails.estimatedCost || 0).toLocaleString()}
               </div>
-              {caseStatus.approvalDetails?.checkerComments && (
+              {caseStatus.approvalDetails.checkerComments && (
                 <div className="detail-item">
                   <strong>Checker Comments:</strong> {caseStatus.approvalDetails.checkerComments}
                 </div>
@@ -952,7 +1071,7 @@ const FamilyDashboard = () => {
         </div>
       )}
 
-      {caseStatus?.status === t('rejected') && (
+      {caseStatus?.status === t('rejected') && caseStatus.rejectionReason && (
         <div className="status-notification rejected">
           <div className="notification-header">
             <i className="fas fa-times-circle"></i>
@@ -978,28 +1097,11 @@ const FamilyDashboard = () => {
         </div>
       )}
     </div>
-  ), [t, familyData.familyName, familyData.village, user?.firstName, lastSaved, caseStatus, uploadedFiles.length]);
+  ), [t, familyData.familyName, familyData.village, user?.firstName, lastSaved, caseStatus, uploadedFiles.length, renderEmailVerificationBanner]);
 
   const renderSubmitTab = useMemo(() => (
     <div className="tab-content" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-      {/* Email verification notice */}
-      {user && !user.emailVerified && (
-        <div className="email-verification-banner">
-          <div className="verification-content">
-            <i className="fas fa-envelope-open-text"></i>
-            <div className="verification-text">
-              <h3>Email Verification Required</h3>
-              <p>Please verify your email address to submit your case application and access all features.</p>
-            </div>
-            <button 
-              className="verify-email-btn-primary"
-              onClick={() => navigate('/verify-email')}
-            >
-              Verify Email Now
-            </button>
-          </div>
-        </div>
-      )}
+      {renderEmailVerificationBanner()}
       
       <div className="form-header-section">
         <h2>{t('submitNewCase')}</h2>
@@ -1021,27 +1123,31 @@ const FamilyDashboard = () => {
           
           <div className="form-row">
             <div className="form-group">
-              <label>{t('familyName')} *</label>
+              <label htmlFor="familyName">{t('familyName')} *</label>
               <input
+                id="familyName"
                 type="text"
                 name="familyName"
                 value={familyData.familyName}
                 onChange={handleInputChange}
                 placeholder={t('enterFamilySurname')}
                 className={formErrors.familyName ? 'error' : ''}
+                required
               />
               {formErrors.familyName && <span className="error-text">{formErrors.familyName}</span>}
             </div>
             
             <div className="form-group">
-              <label>{t('headOfHousehold')} *</label>
+              <label htmlFor="headOfHousehold">{t('headOfHousehold')} *</label>
               <input
+                id="headOfHousehold"
                 type="text"
                 name="headOfHousehold"
                 value={familyData.headOfHousehold}
                 onChange={handleInputChange}
                 placeholder={t('fullNameHead')}
                 className={formErrors.headOfHousehold ? 'error' : ''}
+                required
               />
               {formErrors.headOfHousehold && <span className="error-text">{formErrors.headOfHousehold}</span>}
             </div>
@@ -1049,21 +1155,24 @@ const FamilyDashboard = () => {
 
           <div className="form-row">
             <div className="form-group">
-              <label>{t('primaryPhone')} *</label>
+              <label htmlFor="phoneNumber">{t('primaryPhone')} *</label>
               <input
+                id="phoneNumber"
                 type="tel"
                 name="phoneNumber"
                 value={familyData.phoneNumber}
                 onChange={handleInputChange}
                 placeholder={t('phoneFormat')}
                 className={formErrors.phoneNumber ? 'error' : ''}
+                required
               />
               {formErrors.phoneNumber && <span className="error-text">{formErrors.phoneNumber}</span>}
             </div>
             
             <div className="form-group">
-              <label>{t('emailAddress')}</label>
+              <label htmlFor="email">{t('emailAddress')}</label>
               <input
+                id="email"
                 type="email"
                 name="email"
                 value={familyData.email}
@@ -1077,12 +1186,14 @@ const FamilyDashboard = () => {
 
           <div className="form-row">
             <div className="form-group">
-              <label>{t('totalFamilyMembers')} *</label>
+              <label htmlFor="numberOfMembers">{t('totalFamilyMembers')} *</label>
               <select
+                id="numberOfMembers"
                 name="numberOfMembers"
                 value={familyData.numberOfMembers}
                 onChange={handleInputChange}
                 className={formErrors.numberOfMembers ? 'error' : ''}
+                required
               >
                 <option value="">{t('selectMembers')}</option>
                 {memberOptions}
@@ -1100,12 +1211,14 @@ const FamilyDashboard = () => {
           </div>
 
           <div className="form-group">
-            <label>{t('village')} *</label>
+            <label htmlFor="village">{t('village')} *</label>
             <select
+              id="village"
               name="village"
               value={familyData.village}
               onChange={handleInputChange}
               className={formErrors.village ? 'error' : ''}
+              required
             >
               <option value="">{t('selectVillage')}</option>
               {villageOptions}
@@ -1114,27 +1227,31 @@ const FamilyDashboard = () => {
           </div>
 
           <div className="form-group">
-            <label>{t('currentAddress')} *</label>
+            <label htmlFor="currentAddress">{t('currentAddress')} *</label>
             <textarea
+              id="currentAddress"
               name="currentAddress"
               value={familyData.currentAddress}
               onChange={handleInputChange}
               placeholder={t('currentStaying')}
               rows="2"
               className={formErrors.currentAddress ? 'error' : ''}
+              required
             />
             {formErrors.currentAddress && <span className="error-text">{formErrors.currentAddress}</span>}
           </div>
 
           <div className="form-group">
-            <label>{t('originalPropertyAddress')} *</label>
+            <label htmlFor="originalAddress">{t('originalPropertyAddress')} *</label>
             <textarea
+              id="originalAddress"
               name="originalAddress"
               value={familyData.originalAddress}
               onChange={handleInputChange}
               placeholder={t('destroyedPropertyAddress')}
               rows="3"
               className={formErrors.originalAddress ? 'error' : ''}
+              required
             />
             {formErrors.originalAddress && <span className="error-text">{formErrors.originalAddress}</span>}
           </div>
@@ -1149,24 +1266,28 @@ const FamilyDashboard = () => {
 
           <div className="form-row">
             <div className="form-group">
-              <label>{t('dateOfDestruction')} *</label>
+              <label htmlFor="destructionDate">{t('dateOfDestruction')} *</label>
               <input
+                id="destructionDate"
                 type="date"
                 name="destructionDate"
                 value={familyData.destructionDate}
                 onChange={handleInputChange}
                 className={formErrors.destructionDate ? 'error' : ''}
+                required
               />
               {formErrors.destructionDate && <span className="error-text">{formErrors.destructionDate}</span>}
             </div>
             
             <div className="form-group">
-              <label>{t('causeOfDestruction')} *</label>
+              <label htmlFor="destructionCause">{t('causeOfDestruction')} *</label>
               <select
+                id="destructionCause"
                 name="destructionCause"
                 value={familyData.destructionCause}
                 onChange={handleInputChange}
                 className={formErrors.destructionCause ? 'error' : ''}
+                required
               >
                 <option value="">{t('selectCause')}</option>
                 <option value="airstrike">{t('airstrike')}</option>
@@ -1181,9 +1302,10 @@ const FamilyDashboard = () => {
           </div>
 
           <div className="form-group">
-            <label>{t('estimatedDestructionPercentage')} *</label>
+            <label htmlFor="destructionPercentage">{t('estimatedDestructionPercentage')} *</label>
             <div className="percentage-input">
               <input
+                id="destructionPercentage"
                 type="number"
                 name="destructionPercentage"
                 value={familyData.destructionPercentage}
@@ -1192,6 +1314,7 @@ const FamilyDashboard = () => {
                 min="0"
                 max="100"
                 className={formErrors.destructionPercentage ? 'error' : ''}
+                required
               />
               <span className="percentage-symbol">%</span>
             </div>
@@ -1199,14 +1322,16 @@ const FamilyDashboard = () => {
           </div>
 
           <div className="form-group">
-            <label>{t('detailedDamageDescription')} *</label>
+            <label htmlFor="damageDescription">{t('detailedDamageDescription')} *</label>
             <textarea
+              id="damageDescription"
               name="damageDescription"
               value={familyData.damageDescription}
               onChange={handleInputChange}
               placeholder={t('describeDamage')}
               rows="5"
               className={formErrors.damageDescription ? 'error' : ''}
+              required
             />
             {formErrors.damageDescription && <span className="error-text">{formErrors.damageDescription}</span>}
           </div>
@@ -1227,11 +1352,12 @@ const FamilyDashboard = () => {
                 onChange={handleFileUpload}
                 accept="image/*,.pdf"
                 id="file-upload"
+                aria-describedby="file-upload-description"
               />
               <label htmlFor="file-upload">
                 <i className="fas fa-cloud-upload-alt"></i>
                 <p>{t('uploadInstructions')}</p>
-                <small>{t('fileTypeInfo')}</small>
+                <small id="file-upload-description">{t('fileTypeInfo')}</small>
               </label>
             </div>
           </div>
@@ -1256,41 +1382,41 @@ const FamilyDashboard = () => {
           )}
         </div>
 
-        {/* Submit Button */}
+        {/* Form Actions */}
         <div className="form-actions">
+          <button 
+            type="button"
+            className={`save-draft-btn ${isSaving ? 'loading' : ''}`}
+            onClick={saveDraft}
+            disabled={isSaving}
+          >
+            <i className="fas fa-save"></i>
+            {isSaving ? t('saving') : t('saveDraft')}
+          </button>
+          
           <button 
             type="submit" 
             className={`submit-btn ${isSubmitting ? 'loading' : ''}`}
-            disabled={isSubmitting}
+            disabled={isSubmitting || !user?.emailVerified}
           >
             <i className="fas fa-paper-plane"></i>
             {isSubmitting ? t('submittingCase') : t('submitCaseBtn')}
           </button>
         </div>
+        
+        {!user?.emailVerified && (
+          <div className="verification-warning">
+            <i className="fas fa-exclamation-triangle"></i>
+            <span>Please verify your email address before submitting your case.</span>
+          </div>
+        )}
       </form>
     </div>
-  ), [language, t, familyData, formErrors, handleInputChange, handleSubmit, isSubmitting, handleFileUpload, uploadedFiles, removeFile, updateFileInfo, villageOptions, memberOptions]);
+  ), [language, t, familyData, formErrors, handleInputChange, handleSubmit, isSubmitting, isSaving, handleFileUpload, uploadedFiles, removeFile, updateFileInfo, villageOptions, memberOptions, saveDraft, user?.emailVerified, renderEmailVerificationBanner]);
 
   const renderDocumentsTab = useMemo(() => (
     <div className="tab-content" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-      {/* Email verification notice */}
-      {user && !user.emailVerified && (
-        <div className="email-verification-banner">
-          <div className="verification-content">
-            <i className="fas fa-envelope-open-text"></i>
-            <div className="verification-text">
-              <h3>Email Verification Required</h3>
-              <p>Please verify your email address to view and manage your documents.</p>
-            </div>
-            <button 
-              className="verify-email-btn-primary"
-              onClick={() => navigate('/verify-email')}
-            >
-              Verify Email Now
-            </button>
-          </div>
-        </div>
-      )}
+      {renderEmailVerificationBanner()}
       
       <h2>{t('myDocuments')}</h2>
       <div className="documents-overview">
@@ -1311,7 +1437,7 @@ const FamilyDashboard = () => {
         )}
       </div>
     </div>
-  ), [language, t, uploadedFiles]);
+  ), [language, t, uploadedFiles, renderEmailVerificationBanner]);
 
   const renderTabContent = () => {
     switch(activeTab) {
@@ -1322,9 +1448,24 @@ const FamilyDashboard = () => {
       case 'documents':
         return renderDocumentsTab;
       default:
-        return null;
+        return renderOverviewTab;
     }
   };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="dashboard-page">
+        <Navbar language={language} onLanguageToggle={toggleLanguage} />
+        <div className="loading-container">
+          <div className="loading-spinner">
+            <i className="fas fa-spinner fa-spin"></i>
+            <p>Loading dashboard...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard-page" dir={language === 'ar' ? 'rtl' : 'ltr'}>
