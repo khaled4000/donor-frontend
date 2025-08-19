@@ -1,0 +1,231 @@
+/* Add this to your existing Navbar.css file */
+
+/* Authenticated Navbar Styles */
+.navbar-authenticated {
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.navbar-authenticated.minimized {
+  height: 50px;
+  overflow: hidden;
+}
+
+.navbar-authenticated .nav-container {
+  max-width: 100%;
+  padding: 0 20px;
+}
+
+.nav-minimal {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.nav-logo-minimal {
+  display: flex;
+  align-items: center;
+  color: #fff;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+}
+
+.nav-logo-minimal i {
+  margin-right: 8px;
+  color: #3498db;
+}
+
+.nav-user-controls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.minimize-btn {
+  background: transparent;
+  border: 1px solid #3498db;
+  color: #3498db;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.minimize-btn:hover {
+  background: #3498db;
+  color: #fff;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.user-greeting {
+  font-weight: 500;
+}
+
+.user-type {
+  font-size: 0.8rem;
+  color: #bdc3c7;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dashboard-link {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #3498db;
+  text-decoration: none;
+  padding: 8px 15px;
+  border: 1px solid #3498db;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.dashboard-link:hover {
+  background: #3498db;
+  color: #fff;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: #e74c3c;
+  border: none;
+  color: #fff;
+  padding: 8px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.logout-btn:hover {
+  background: #c0392b;
+}
+
+.language-btn {
+  background: #f39c12;
+  border: none;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.language-btn:hover {
+  background: #e67e22;
+}
+
+/* Alert Styles for Login Page */
+.alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  border-radius: 5px;
+  font-size: 0.9rem;
+  animation: slideIn 0.3s ease;
+}
+
+.alert i {
+  margin-right: 10px;
+}
+
+.alert-success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.alert-error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.alert-close {
+  background: transparent;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+.alert-close:hover {
+  opacity: 1;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Design for Authenticated Navbar */
+@media (max-width: 768px) {
+  .nav-user-controls {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .user-info {
+    display: none;
+  }
+  
+  .nav-actions {
+    gap: 8px;
+  }
+  
+  .dashboard-link,
+  .logout-btn,
+  .language-btn {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+  
+  .navbar-authenticated.minimized .nav-actions {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav-logo-minimal {
+    font-size: 1rem;
+  }
+  
+  .nav-actions {
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .minimize-btn {
+    padding: 6px 8px;
+  }
+}

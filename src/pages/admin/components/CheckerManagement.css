@@ -1,0 +1,1740 @@
+/* Checker Management Styles */
+.checker-management {
+  padding: 20px;
+  width: 100%;
+  height: 100vh;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Fix for logout button styling conflicts */
+.checker-management .logout-btn,
+.checker-management button.logout-btn,
+.checker-management .admin-logout-btn {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 10px !important;
+  padding: 12px 24px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  text-decoration: none !important;
+  min-width: 120px !important;
+  justify-content: center !important;
+}
+
+.checker-management .logout-btn:hover,
+.checker-management button.logout-btn:hover,
+.checker-management .admin-logout-btn:hover {
+  background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 20px rgba(220, 38, 38, 0.4) !important;
+}
+
+.checker-management .logout-btn:active,
+.checker-management button.logout-btn:active,
+.checker-management .admin-logout-btn:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3) !important;
+}
+
+.checker-management .logout-btn:focus,
+.checker-management button.logout-btn:focus,
+.checker-management .admin-logout-btn:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.3) !important;
+}
+
+/* Ensure logout button icon styling */
+.checker-management .logout-btn .btn-icon,
+.checker-management button.logout-btn .btn-icon,
+.checker-management .admin-logout-btn .btn-icon {
+  font-size: 16px !important;
+  margin-right: 8px !important;
+  transition: transform 0.2s !important;
+}
+
+.checker-management .logout-btn:hover .btn-icon,
+.checker-management button.logout-btn:hover .btn-icon,
+.checker-management .admin-logout-btn:hover .btn-icon {
+  transform: scale(1.1) !important;
+}
+
+/* Loading State */
+.checker-management-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.loading-spinner {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  margin-bottom: 20px;
+}
+
+.loading-spinner::before,
+.loading-spinner::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+}
+
+.loading-spinner::before {
+  width: 100%;
+  height: 100%;
+  background: conic-gradient(from 0deg, transparent, #3b82f6, #8b5cf6, #3b82f6, transparent);
+  animation: spin 1.5s linear infinite;
+}
+
+.loading-spinner::after {
+  width: 80%;
+  height: 80%;
+  background: white;
+  top: 10%;
+  left: 10%;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px #f1f5f9;
+}
+
+/* New Professional Loading Spinner */
+.loading-spinner {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin-bottom: 24px;
+}
+
+.loading-spinner::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 4px solid #f3f4f6;
+  border-top: 4px solid #3b82f6;
+  border-right: 4px solid #8b5cf6;
+  border-radius: 50%;
+  animation: spin 1.2s linear infinite;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.loading-spinner::after {
+  content: '';
+  position: absolute;
+  width: 60%;
+  height: 60%;
+  top: 20%;
+  left: 20%;
+  border: 3px solid transparent;
+  border-top: 3px solid #6366f1;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite reverse;
+  filter: blur(0.5px);
+}
+
+/* Add a pulsing center dot */
+.loading-spinner .center-dot {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: pulse 1.5s ease-in-out infinite;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { 
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  50% { 
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 0.8;
+  }
+}
+
+/* Loading text animation */
+.loading-spinner + p {
+  font-size: 16px;
+  font-weight: 500;
+  color: #6b7280;
+  margin: 0;
+  animation: textFade 2s ease-in-out infinite;
+  background: linear-gradient(135deg, #6b7280, #9ca3af);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@keyframes textFade {
+  0%, 100% { 
+    opacity: 0.8;
+    transform: translateY(0);
+  }
+  50% { 
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
+/* Header */
+.checker-management-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  gap: 20px;
+  flex-shrink: 0;
+}
+
+.header-title h2 {
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.header-title p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 16px;
+}
+
+/* Stats Cards - Smaller and More Stylish */
+.checker-stats {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  margin-bottom: 20px;
+  justify-content: space-between;
+  padding: 0 8px;
+}
+
+.checker-management .stat-card {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  padding: 20px 18px;
+  border-radius: 18px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  min-width: 160px;
+  max-width: 200px;
+  border: 2px solid #e2e8f0;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  animation: fadeInUp 0.6s ease-out;
+  margin: 0 10px;
+  flex: 1;
+  min-height: 90px;
+}
+
+.checker-management .stat-card:nth-child(1) { animation-delay: 0.1s; }
+.checker-management .stat-card:nth-child(2) { animation-delay: 0.2s; }
+.checker-management .stat-card:nth-child(3) { animation-delay: 0.3s; }
+.checker-management .stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+.checker-management .stat-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+  border-color: #cbd5e1;
+}
+
+/* Individual card styling with distinct borders and backgrounds */
+.checker-management .total-card {
+  border-left: 4px solid #3b82f6;
+  background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);
+}
+
+.checker-management .total-card:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 12px 32px rgba(59, 130, 246, 0.2);
+}
+
+.checker-management .active-card {
+  border-left: 4px solid #10b981;
+  background: linear-gradient(135deg, #ffffff 0%, #ecfdf5 100%);
+}
+
+.checker-management .active-card:hover {
+  border-color: #10b981;
+  box-shadow: 0 12px 32px rgba(16, 185, 129, 0.2);
+}
+
+.checker-management .inactive-card {
+  border-left: 4px solid #ef4444;
+  background: linear-gradient(135deg, #ffffff 0%, #fef2f2 100%);
+}
+
+.checker-management .inactive-card:hover {
+  border-color: #ef4444;
+  box-shadow: 0 12px 32px rgba(239, 68, 68, 0.2);
+}
+
+.checker-management .created-card {
+  border-left: 4px solid #f59e0b;
+  background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%);
+}
+
+.checker-management .created-card:hover {
+  border-color: #f59e0b;
+  box-shadow: 0 12px 32px rgba(245, 158, 11, 0.2);
+}
+
+.checker-management .stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.checker-management .stat-card:hover::before {
+  opacity: 1;
+}
+
+.checker-management .stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16px;
+  font-size: 20px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.checker-management .stat-card:hover .stat-icon {
+  transform: scale(1.05);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+}
+
+.checker-management .stat-icon.total {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: #ffffff;
+  border: 2px solid rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.checker-management .stat-icon.active {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border: 2px solid rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.checker-management .stat-icon.inactive {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  border: 2px solid rgba(239, 68, 68, 0.3);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.checker-management .stat-icon.created {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #ffffff;
+  border: 2px solid rgba(245, 158, 11, 0.3);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.checker-management .stat-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 4px;
+}
+
+.checker-management .stat-number {
+  font-size: 24px;
+  font-weight: 800;
+  color: #1f2937;
+  line-height: 1.1;
+  margin-bottom: 2px;
+  transition: all 0.3s ease;
+}
+
+.checker-management .stat-card:hover .stat-number {
+  color: #1e293b;
+  transform: scale(1.05);
+}
+
+.checker-management .stat-label {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1.1;
+}
+
+/* Controls - Reorganized Layout */
+.checker-controls {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+}
+
+.controls-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+.controls-row:last-child {
+  margin-bottom: 0;
+}
+
+.search-section, .filter-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.control-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.search-box {
+  position: relative;
+  flex: 1;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  font-size: 16px;
+  z-index: 1;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 12px 12px 12px 40px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  background: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-box input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.status-filter {
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: white;
+  font-size: 14px;
+  min-width: 140px;
+  cursor: pointer;
+}
+
+.action-section {
+  display: flex;
+  gap: 12px;
+}
+
+.results-info {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.results-count {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+  background: #f9fafb;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.refresh-btn, .create-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.refresh-btn {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.refresh-btn:hover {
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  color: #334155;
+}
+
+.refresh-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.create-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.create-btn:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+}
+
+.create-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* Focus states for accessibility */
+.refresh-btn:focus, .create-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.refresh-btn:focus {
+  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.3);
+}
+
+/* Icon styling for main buttons */
+.checker-management .btn-icon {
+  font-size: 16px;
+  margin-right: 8px;
+  transition: transform 0.2s;
+}
+
+.checker-management .refresh-btn:hover .btn-icon {
+  transform: rotate(180deg);
+}
+
+.checker-management .create-btn:hover .btn-icon {
+  transform: scale(1.1);
+}
+
+/* Add ripple effect */
+.refresh-btn::after, .create-btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s;
+}
+
+.refresh-btn:active::after, .create-btn:active::after {
+  width: 120px;
+  height: 120px;
+}
+
+/* Table */
+.checkers-table-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  position: relative;
+}
+
+.checkers-table {
+  width: 100%;
+  border-collapse: collapse;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.checkers-table-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.checkers-table th {
+  background: #f9fafb;
+  padding: 18px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e5e7eb;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: relative;
+}
+
+.checkers-table th::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 16px;
+  right: 16px;
+  height: 2px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  opacity: 0.3;
+}
+
+.checkers-table td {
+  padding: 20px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  transition: background-color 0.2s ease;
+}
+
+.checkers-table td:last-child {
+  text-align: center;
+  vertical-align: middle;
+  padding: 16px;
+}
+
+.checkers-table tr:hover {
+  background: #f9fafb;
+}
+
+.checkers-table tr.inactive-row {
+  opacity: 0.6;
+}
+
+.checker-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.checker-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.checker-name strong {
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.username {
+  background: #f3f4f6;
+  color: #6b7280;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.checker-id {
+  font-size: 12px;
+  color: #9ca3af;
+  font-family: monospace;
+}
+
+.contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.contact-info div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.contact-info i {
+  width: 14px;
+  color: #6b7280;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.active {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-badge.inactive {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.last-login {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.checker-stats {
+  display: flex;
+  gap: 16px;
+}
+
+.checker-stats .stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.checker-stats .stat-item strong {
+  font-size: 16px;
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.checker-stats .stat-item span {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.creation-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.creation-date {
+  font-size: 14px;
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.creation-method {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.admin-created {
+  color: #7c3aed;
+}
+
+.self-registered {
+  color: #059669;
+}
+
+.created-by {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+  min-height: 44px;
+  height: 44px;
+  visibility: visible;
+  opacity: 1;
+}
+
+.action-buttons button {
+  min-width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+  line-height: 1;
+  margin: 0;
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Enhanced action button styling */
+.action-btn {
+  min-width: 95px;
+  max-width: 95px;
+  height: 44px;
+  padding: 10px 12px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  align-self: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+  line-height: 1;
+  margin: 0;
+  visibility: visible;
+  opacity: 1;
+}
+
+.action-btn .action-icon {
+  font-size: 16px;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.action-btn .action-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  transition: all 0.3s ease;
+  line-height: 1;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* Hide labels on smaller screens, show only icons */
+@media (max-width: 1024px) {
+  .action-btn .action-label {
+    display: none;
+  }
+  
+  .action-btn {
+    min-width: 44px;
+    padding: 12px;
+  }
+  
+  .action-btn .action-icon {
+    margin: 0;
+  }
+}
+
+.action-buttons button:hover {
+  transform: translateY(-2px);
+}
+
+.action-buttons button:active {
+  transform: translateY(0);
+}
+
+/* Focus states for accessibility */
+.action-buttons button:focus {
+  outline: none;
+}
+
+.edit-btn:focus {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.toggle-btn:focus {
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+.delete-btn:focus {
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2);
+}
+
+.edit-btn {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
+  min-width: 95px;
+  max-width: 95px;
+  height: 44px;
+}
+
+.edit-btn:hover {
+  background: linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+  color: #1e40af;
+}
+
+.edit-btn:hover .action-icon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.toggle-btn.activate {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #047857;
+  border: 1px solid #6ee7b7;
+  min-width: 95px;
+  max-width: 95px;
+  height: 44px;
+}
+
+.toggle-btn.activate:hover {
+  background: linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+  color: #065f46;
+}
+
+.toggle-btn.activate:hover .action-icon {
+  transform: scale(1.15);
+}
+
+.toggle-btn.deactivate {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #b45309;
+  border: 1px solid #fcd34d;
+  min-width: 95px;
+  max-width: 95px;
+  height: 44px;
+}
+
+.toggle-btn.deactivate:hover {
+  background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+  color: #92400e;
+}
+
+.toggle-btn.deactivate:hover .action-icon {
+  transform: scale(1.15) rotate(-5deg);
+}
+
+.delete-btn {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+  min-width: 95px;
+  max-width: 95px;
+  height: 44px;
+}
+
+.delete-btn:hover {
+  background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+  color: #991b1b;
+}
+
+.delete-btn:hover .action-icon {
+  transform: scale(1.1) rotate(5deg);
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: scale(1.1) rotate(5deg) translateX(0); }
+  25% { transform: scale(1.1) rotate(5deg) translateX(-1px); }
+  75% { transform: scale(1.1) rotate(5deg) translateX(1px); }
+}
+
+/* Add subtle pulse animation on hover */
+.action-buttons button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 10px;
+  background: inherit;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.action-buttons button:hover::before {
+  opacity: 0.1;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.2;
+  }
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6c757d;
+}
+
+.empty-state i {
+  font-size: 48px;
+  margin-bottom: 20px;
+  color: #dee2e6;
+}
+
+.empty-state h3 {
+  margin-bottom: 10px;
+  color: #495057;
+}
+
+.empty-state p {
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.create-first-checker-btn {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.25);
+}
+
+.create-first-checker-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.35);
+}
+
+.create-first-checker-btn .btn-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 24px 0 24px;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 24px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: color 0.2s;
+}
+
+.modal-close:hover {
+  color: #374151;
+}
+
+/* Form Styles */
+.checker-form {
+  padding: 0 24px 24px 24px;
+}
+
+.checker-management .form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.checker-management .form-group {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.checker-management .form-group label {
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: #374151;
+  font-size: 14px;
+}
+
+.checker-management .form-group input,
+.checker-management .form-group textarea {
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.checker-management .form-group input:focus,
+.checker-management .form-group textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.checker-management .checkbox-group {
+  margin: 20px 0;
+}
+
+.checker-management .checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #374151;
+}
+
+.checker-management .checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 24px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.cancel-btn, .submit-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.cancel-btn {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.cancel-btn:hover {
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  color: #334155;
+}
+
+.cancel-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.submit-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.submit-btn:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+}
+
+.submit-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* Focus states for modal buttons */
+.cancel-btn:focus, .submit-btn:focus {
+  outline: none;
+}
+
+.cancel-btn:focus {
+  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.3);
+}
+
+.submit-btn:focus {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+.modal-actions .delete-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.3);
+}
+
+/* Delete Confirmation Modal */
+.modal-content.delete-confirm {
+  max-width: 500px;
+}
+
+.delete-content {
+  padding: 0 24px 24px 24px;
+  text-align: center;
+}
+
+.warning-icon {
+  margin-bottom: 20px;
+}
+
+.warning-icon i {
+  font-size: 48px;
+  color: #f59e0b;
+}
+
+.delete-content h4 {
+  margin: 0 0 16px 0;
+  color: #1f2937;
+  font-size: 18px;
+}
+
+.warning-text {
+  color: #6b7280;
+  margin: 16px 0;
+  line-height: 1.5;
+}
+
+.cases-warning {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 12px;
+  border-radius: 8px;
+  margin: 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.modal-actions .delete-btn {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.modal-actions .delete-btn:hover {
+  background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(220, 38, 38, 0.4);
+}
+
+.modal-actions .delete-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .checker-management-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .checker-stats {
+    justify-content: center;
+  }
+}
+
+/* Additional logout button fixes for different contexts */
+.checker-management .header-actions .logout-btn,
+.checker-management .admin-header .logout-btn,
+.checker-management .top-bar .logout-btn {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 10px !important;
+  padding: 12px 24px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  text-decoration: none !important;
+  min-width: 120px !important;
+  justify-content: center !important;
+}
+
+/* Override any conflicting button styles */
+.checker-management button[class*="logout"],
+.checker-management .btn[class*="logout"],
+.checker-management a[class*="logout"] {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 10px !important;
+  padding: 12px 24px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  text-decoration: none !important;
+  min-width: 120px !important;
+  justify-content: center !important;
+}
+
+@media (max-width: 768px) {
+  .checker-stats {
+    gap: 16px;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .checker-management .stat-card {
+    min-width: 280px;
+    max-width: 320px;
+    padding: 20px;
+    margin: 0;
+  }
+  
+  .checker-management .stat-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
+    margin-right: 16px;
+  }
+  
+  .checker-management .stat-number {
+    font-size: 22px;
+  }
+  
+  .checker-management .stat-label {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 768px) {
+  .checker-management {
+    padding: 16px;
+    height: 100vh;
+    width: 100vw;
+  }
+  
+  .checker-controls {
+    padding: 16px;
+  }
+  
+  .controls-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+  
+  .search-section, .filter-section {
+    flex: none;
+  }
+  
+  .action-row {
+    flex-direction: column-reverse;
+    gap: 16px;
+  }
+  
+  .action-section {
+    justify-content: center;
+  }
+  
+  .results-info {
+    justify-content: center;
+  }
+  
+  .checker-management .form-row {
+  flex-direction: column;
+}
+  
+  .checker-management .checker-stats {
+  grid-template-columns: repeat(2, 1fr);
+}
+  
+  .checkers-table-container {
+    overflow-x: auto;
+  }
+  
+  .checkers-table {
+    min-width: 900px;
+  }
+  
+  .modal-content {
+    margin: 20px;
+    max-width: none;
+  }
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Global logout button override to fix styling conflicts */
+.checker-management *[class*="logout"],
+.checker-management *[id*="logout"],
+.checker-management button[type="button"][class*="logout"],
+.checker-management a[href*="logout"] {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 10px !important;
+  padding: 12px 24px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  text-decoration: none !important;
+  min-width: 120px !important;
+  justify-content: center !important;
+  font-family: inherit !important;
+  line-height: 1.5 !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+}
+
+.checker-management *[class*="logout"]:hover,
+.checker-management *[id*="logout"]:hover,
+.checker-management button[type="button"][class*="logout"]:hover,
+.checker-management a[href*="logout"]:hover {
+  background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 20px rgba(220, 38, 38, 0.4) !important;
+}
+
+.checker-management *[class*="logout"]:active,
+.checker-management *[id*="logout"]:active,
+.checker-management button[type="button"][class*="logout"]:active,
+.checker-management a[href*="logout"]:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3) !important;
+}
+
+.checker-management *[class*="logout"]:focus,
+.checker-management *[id*="logout"]:focus,
+.checker-management button[type="button"][class*="logout"]:focus,
+.checker-management a[href*="logout"]:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.3) !important;
+}
+
+/* Pagination Controls */
+.pagination-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 0;
+  border-top: 1px solid #e9ecef;
+  margin-top: 20px;
+}
+
+.pagination-info {
+  display: flex;
+  align-items: center;
+}
+
+.pagination-info .results-count {
+  color: #6c757d;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.pagination-info .more-available {
+  color: #667eea;
+  font-weight: 600;
+}
+
+.pagination-info .filtered-note {
+  color: #6c757d;
+  font-style: italic;
+}
+
+.pagination-info .search-note {
+  color: #fd7e14;
+  font-weight: 500;
+}
+
+.pagination-info .load-more-note {
+  color: #667eea;
+  font-weight: 500;
+  font-style: italic;
+}
+
+.pagination-info .load-more-suggestion {
+  color: #fd7e14;
+  font-weight: 500;
+  font-style: italic;
+}
+
+.pagination-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.load-more-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
+}
+
+.load-more-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.35);
+}
+
+.load-more-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.load-more-btn .btn-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.all-loaded {
+  color: #28a745;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.all-loaded i {
+  font-size: 16px;
+}
+
+.all-loaded .filtered-end-note {
+  color: #6c757d;
+  font-size: 12px;
+  font-weight: 400;
+  font-style: italic;
+  margin-left: 8px;
+}
+
+.all-loaded .complete-note {
+  color: #28a745;
+  font-size: 12px;
+  font-weight: 400;
+  font-style: italic;
+  margin-left: 8px;
+}
+
+.all-loaded .backend-limit-note {
+  color: #dc3545;
+  font-size: 12px;
+  font-weight: 400;
+  font-style: italic;
+  margin-left: 8px;
+}
+
+/* Small Loading Spinner */
+.loading-spinner-small {
+  width: 20px;
+  height: 20px;
+  position: relative;
+}
+
+.loading-spinner-small::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #667eea;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.loading-spinner-small::after {
+  content: '';
+  position: absolute;
+  width: 60%;
+  height: 60%;
+  top: 20%;
+  left: 20%;
+  border: 1px solid transparent;
+  border-top: 1px solid #8b5cf6;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite reverse;
+}
+
+/* Responsive Pagination */
+@media (max-width: 768px) {
+  .pagination-controls {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+    text-align: center;
+  }
+  
+  .pagination-info {
+    justify-content: center;
+  }
+  
+  .pagination-actions {
+    justify-content: center;
+  }
+  
+  .load-more-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
