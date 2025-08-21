@@ -1,4 +1,6 @@
 // Debug utility for authentication issues
+import config from '../config/environment';
+
 export const debugAuth = () => {
   console.log('🔍 AUTH DEBUG - Current authentication state:');
   
@@ -79,7 +81,7 @@ export const testApiCall = async () => {
   }
   
   try {
-    const response = await fetch('http://localhost:5000/api/auth/profile', {
+    const response = await fetch(`${config.API_BASE_URL}/auth/profile`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'

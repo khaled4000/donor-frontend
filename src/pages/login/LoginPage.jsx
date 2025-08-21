@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../authContext/AuthContext';
 import { adminAuthStorage } from '../../utils/authStorage';
 import Navbar from '../../components/Navbar/Navbar';
+import config from '../../config/environment';
 import './Login.css';
 
 const LoginPage = () => {
@@ -85,7 +86,7 @@ const LoginPage = () => {
     try {
       console.log('🔐 LOGIN - Attempting admin login...');
       
-      const adminResponse = await fetch('http://localhost:5000/api/admin/auth/login', {
+      const adminResponse = await fetch(`${config.API_BASE_URL}/admin/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

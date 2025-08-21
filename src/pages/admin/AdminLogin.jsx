@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { adminAuthStorage } from '../../utils/authStorage';
+import config from '../../config/environment';
 import './AdminLogin.css';
 
 const AdminLogin = () => {
@@ -25,7 +26,7 @@ const AdminLogin = () => {
         setError('');
 
         try {
-            const response = await fetch('http://localhost:5000/api/admin/auth/login', {
+            const response = await fetch(`${config.API_BASE_URL}/admin/auth/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

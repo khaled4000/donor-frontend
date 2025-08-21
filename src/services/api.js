@@ -1,8 +1,9 @@
 // API Service for Backend Integration
 import { regularAuthStorage, adminAuthStorage } from '../utils/authStorage';
+import config from '../config/environment';
 
-const API_BASE_URL = 'http://localhost:5000/api';
-const DEBUG_MODE = import.meta.env.DEV && localStorage.getItem('apiDebug') === 'true';
+const API_BASE_URL = config.API_BASE_URL;
+const DEBUG_MODE = config.DEBUG_MODE && localStorage.getItem('apiDebug') === 'true';
 
 class ApiService {
   // Helper to enable debugging in console: ApiService.enableDebug()

@@ -1,5 +1,6 @@
 // Simple API test utility to verify integration
 import ApiService from '../services/api';
+import config from '../config/environment';
 
 export const testApiIntegration = async () => {
   try {
@@ -7,7 +8,7 @@ export const testApiIntegration = async () => {
     
     // Test 1: Check if backend is running
     try {
-      const response = await fetch('http://localhost:5000/api/health');
+      const response = await fetch(`${config.API_BASE_URL}/health`);
       if (response.ok) {
         console.log('✅ Backend server is running');
       } else {

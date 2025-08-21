@@ -12,6 +12,7 @@ import { toast } from "react-toastify";
 import { FiLogOut, FiUser } from "react-icons/fi";
 import { adminAuthStorage } from "../../utils/authStorage";
 import CheckerManagement from "./components/CheckerManagement";
+import config from "../../config/environment";
 import "./AdminDashboard.css";
 
 const AdminDashboard = () => {
@@ -150,7 +151,7 @@ const AdminDashboard = () => {
     try {
       console.log("🔍 Making auth verification request...");
       const response = await fetch(
-        "http://localhost:5000/api/admin/auth/verify",
+        `${config.API_BASE_URL}/admin/auth/verify`,
         {
           headers: {
             Authorization: `Bearer ${authData.token}`,
@@ -191,7 +192,7 @@ const AdminDashboard = () => {
         const authData = adminAuthStorage.getAuth();
         const token = authData.token;
         const response = await fetch(
-          "http://localhost:5000/api/admin/cases/kanban",
+          `${config.API_BASE_URL}/admin/cases/kanban`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -213,7 +214,7 @@ const AdminDashboard = () => {
         const authData = adminAuthStorage.getAuth();
         const token = authData.token;
         const response = await fetch(
-          "http://localhost:5000/api/admin/cases/all",
+          `${config.API_BASE_URL}/admin/cases/all`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -235,7 +236,7 @@ const AdminDashboard = () => {
         const authData = adminAuthStorage.getAuth();
         const token = authData.token;
         const response = await fetch(
-          "http://localhost:5000/api/cases/fully-funded",
+          `${config.API_BASE_URL}/cases/fully-funded`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -256,7 +257,7 @@ const AdminDashboard = () => {
       try {
         const authData = adminAuthStorage.getAuth();
         const token = authData.token;
-        const response = await fetch("http://localhost:5000/api/admin/users", {
+        const response = await fetch(`${config.API_BASE_URL}/admin/users`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -276,7 +277,7 @@ const AdminDashboard = () => {
         const authData = adminAuthStorage.getAuth();
         const token = authData.token;
         const response = await fetch(
-          "http://localhost:5000/api/admin/checker-management/checkers",
+          `${config.API_BASE_URL}/admin/checker-management/checkers`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -341,10 +342,10 @@ const AdminDashboard = () => {
 
         // Try multiple possible endpoints for deleting cases
         const possibleEndpoints = [
-          `http://localhost:5000/api/admin/cases/${caseId}`,
-          `http://localhost:5000/api/cases/${caseId}/delete`,
-          `http://localhost:5000/api/admin/cases/${caseId}/delete`,
-          `http://localhost:5000/api/cases/${caseId}`,
+          `${config.API_BASE_URL}/admin/cases/${caseId}`,
+          `${config.API_BASE_URL}/cases/${caseId}/delete`,
+          `${config.API_BASE_URL}/admin/cases/${caseId}/delete`,
+          `${config.API_BASE_URL}/cases/${caseId}`,
         ];
 
         let response;
@@ -481,7 +482,7 @@ const AdminDashboard = () => {
       const authData = adminAuthStorage.getAuth();
       const token = authData.token;
       const response = await fetch(
-        `http://localhost:5000/api/admin/cases/${draggedCase.caseId}/status`,
+        `${config.API_BASE_URL}/admin/cases/${draggedCase.caseId}/status`,
         {
           method: "PATCH",
           headers: {
@@ -598,10 +599,10 @@ const AdminDashboard = () => {
 
         // Try multiple possible endpoints - start with the most likely ones
         const possibleEndpoints = [
-          `http://localhost:5000/api/admin/cases/${caseId}/assign`,
-          `http://localhost:5000/api/cases/${caseId}/assign-checker`,
-          `http://localhost:5000/api/admin/assign-checker`,
-          `http://localhost:5000/api/checker/assign-case`,
+          `${config.API_BASE_URL}/admin/cases/${caseId}/assign`,
+                      `${config.API_BASE_URL}/cases/${caseId}/assign-checker`,
+                      `${config.API_BASE_URL}/admin/assign-checker`,
+                      `${config.API_BASE_URL}/checker/assign-case`,
         ];
 
         let response;
@@ -682,7 +683,7 @@ const AdminDashboard = () => {
         if (selectedCase?.status === "submitted") {
           try {
             const statusResponse = await fetch(
-              `http://localhost:5000/api/admin/cases/${caseId}/status`,
+              `${config.API_BASE_URL}/admin/cases/${caseId}/status`,
               {
                 method: "PATCH",
                 headers: {
@@ -830,7 +831,7 @@ const AdminDashboard = () => {
       const authData = adminAuthStorage.getAuth();
       const token = authData.token;
       const response = await fetch(
-        `http://localhost:5000/api/admin/users/${userId}/status`,
+        `${config.API_BASE_URL}/admin/users/${userId}/status`,
         {
           method: "PATCH",
           headers: {
@@ -869,7 +870,7 @@ const AdminDashboard = () => {
       const authData = adminAuthStorage.getAuth();
       const token = authData.token;
       const response = await fetch(
-        `http://localhost:5000/api/admin/users/${userId}`,
+        `${config.API_BASE_URL}/admin/users/${userId}`,
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },

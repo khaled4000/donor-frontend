@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { adminAuthStorage } from '../../utils/authStorage';
 import useNoCache from '../../hooks/useNoCache';
+import config from '../../config/environment';
 
 /**
  * Component that protects admin routes from unauthorized access
@@ -35,7 +36,7 @@ const AdminProtectedRoute = ({ children, requiredRole = 'admin' }) => {
 
         // Verify token is still valid with backend
         try {
-          const response = await fetch('http://localhost:5000/api/admin/auth/verify', {
+          const response = await fetch(`${config.API_BASE_URL}/admin/auth/verify`, {
             headers: {
               'Authorization': `Bearer ${authData.token}`
             }

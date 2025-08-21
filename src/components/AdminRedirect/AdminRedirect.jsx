@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { adminAuthStorage } from '../../utils/authStorage';
+import config from '../../config/environment';
 
 /**
  * Component that redirects authenticated admin users to the appropriate dashboard
@@ -27,7 +28,7 @@ const AdminRedirect = ({ children }) => {
       if (authData.isAuthenticated && authData.token) {
         try {
           // Verify token and get user role
-          const response = await fetch('http://localhost:5000/api/admin/auth/verify', {
+          const response = await fetch(`${config.API_BASE_URL}/admin/auth/verify`, {
             headers: {
               'Authorization': `Bearer ${authData.token}`
             }
