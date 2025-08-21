@@ -9,18 +9,12 @@
       }
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ],
-  "env": {
-    "VITE_API_BASE_URL": "https://donor-backend-dxxd.onrender.com/api",
-    "VITE_FRONTEND_URL": "https://your-vercel-domain.vercel.app",
-    "VITE_DEBUG_MODE": "false",
-    "VITE_NODE_ENV": "production"
-  },
   "headers": [
     {
       "source": "/(.*)",
