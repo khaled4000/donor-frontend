@@ -130,6 +130,10 @@ const RegisterPage = () => {
         errorMessage = 'Network error. Please check your internet connection and try again.';
       } else if (error.message && error.message.includes('Server returned invalid JSON')) {
         errorMessage = 'Server error. Please try again later or contact support if the problem persists.';
+      } else if (error.message && error.message.includes('Please fill in all required fields')) {
+        errorMessage = 'Please fill in all required fields.';
+      } else if (error.message && error.message.includes('Password must be at least 6 characters')) {
+        errorMessage = 'Password must be at least 6 characters long.';
       }
       
       setAlertMessage(errorMessage);
@@ -219,10 +223,27 @@ const RegisterPage = () => {
                       <button 
                         className="btn btn-sm btn-primary"
                         onClick={() => navigate('/login')}
-                        style={{ marginLeft: '10px', marginTop: '5px' }}
                       >
                         <i className="fas fa-sign-in-alt"></i>
                         Go to Login
+                      </button>
+                      <button 
+                        className="btn btn-sm btn-secondary"
+                        onClick={() => {
+                          setShowAlert(false);
+                          // Clear the form for a new attempt
+                          setFormData({
+                            firstName: '',
+                            lastName: '',
+                            email: '',
+                            phone: '',
+                            password: '',
+                            confirmPassword: ''
+                          });
+                        }}
+                      >
+                        <i className="fas fa-edit"></i>
+                        Try Different Email
                       </button>
                     </div>
                   )}

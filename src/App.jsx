@@ -52,7 +52,7 @@ function App() {
               </AdminRedirect>
             } />
 
-            <Route path="/about" element={<AdminRedirect><About /></AdminRedirect>} />
+            <Route path="/about" element={<About />} />
 
             {/* Admin Routes - Direct access to dashboards */}
             <Route path="/admin/dashboard" element={

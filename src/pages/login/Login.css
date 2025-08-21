@@ -19,11 +19,11 @@
   }
   
   .login-section {
-    padding: 20px 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
+    padding: 120px 0 40px 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    min-height: 100vh !important;
   }
   
   .container {
@@ -36,11 +36,13 @@
   
   /* Login Container */
   .login-container {
-    background: white;
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: var(--shadow);
-    transition: var(--transition);
+    background: white !important;
+    border-radius: 20px !important;
+    overflow: hidden !important;
+    box-shadow: var(--shadow) !important;
+    transition: var(--transition) !important;
+    position: relative !important;
+    z-index: 5 !important;
   }
   
   .login-container:hover {
@@ -53,11 +55,12 @@
     color: white !important;
     padding: 35px 20px !important;
     text-align: center !important;
-    position: relative;
+    position: relative !important;
     overflow: visible !important;
     min-height: 80px !important;
     display: block !important;
     visibility: visible !important;
+    z-index: 10 !important;
   }
   
   .login-header::before {
@@ -84,14 +87,14 @@
     margin: 0 0 10px 0 !important;
     font-weight: 700 !important;
     display: flex !important;
-    align-items: center;
-    justify-content: center;
-    gap: 15px;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 15px !important;
     color: white !important;
     line-height: 1.2 !important;
     visibility: visible !important;
     opacity: 1 !important;
-    z-index: 10 !important;
+    z-index: 20 !important;
     position: relative !important;
   }
   
@@ -106,7 +109,7 @@
     margin: 0 !important;
     color: white !important;
     visibility: visible !important;
-    z-index: 10 !important;
+    z-index: 20 !important;
     position: relative !important;
   }
   
@@ -410,27 +413,31 @@
   /* Responsive Design */
   @media (max-width: 768px) {
     .container {
-      padding: 0 15px;
+      padding: 0 15px !important;
+    }
+    
+    .login-section {
+      padding: 110px 0 40px !important;
     }
     
     .login-page .form-options {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 15px;
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 15px !important;
     }
   }
   
   @media (max-width: 480px) {
     .login-section {
-      padding: 80px 0 40px;
+      padding: 100px 0 40px !important;
     }
     
     .login-form {
-      padding: 30px 20px;
+      padding: 30px 20px !important;
     }
     
     .login-header {
-      padding: 30px 20px;
+      padding: 30px 20px !important;
     }
   }
   

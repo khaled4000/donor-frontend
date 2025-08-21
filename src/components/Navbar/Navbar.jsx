@@ -18,7 +18,26 @@ const Navbar = ({ language, onLanguageToggle }) => {
     const authData = adminAuthStorage.getAuth();
     if (authData.isAuthenticated) {
       setAdminUser(authData.user);
+    } else {
+      setAdminUser(null);
     }
+    
+    // Check for logout flag and reset admin state
+    if (sessionStorage.getItem('adminLogout') === 'true') {
+      setAdminUser(null);
+      sessionStorage.removeItem('adminLogout');
+    }
+    
+    // Listen for admin logout events
+    const handleAdminLogout = () => {
+      setAdminUser(null);
+    };
+    
+    window.addEventListener('adminLogout', handleAdminLogout);
+    
+    return () => {
+      window.removeEventListener('adminLogout', handleAdminLogout);
+    };
   }, []);
 
   const toggleMenu = () => {
@@ -39,6 +58,8 @@ const Navbar = ({ language, onLanguageToggle }) => {
       // Admin logout
       adminAuthStorage.clearAuth();
       setAdminUser(null);
+      // Set logout flag and force reload to ensure clean state
+      sessionStorage.setItem('adminLogout', 'true');
       window.location.href = '/';
     } else {
       // Regular user logout
@@ -61,8 +82,8 @@ const Navbar = ({ language, onLanguageToggle }) => {
         <div className="nav-container">
           <div className="nav-minimal">
             <Link to="/" className="nav-logo-minimal">
-              <i className="fas fa-heart"></i>
-              Donor Project
+              <img src="/logo.png" alt="Nahdat Watan | نهضة وطن" className="nav-logo-img" />
+              <span className="nav-logo-text">Nahdat Watan | نهضة وطن</span>
             </Link>
           </div>
           
@@ -87,8 +108,8 @@ const Navbar = ({ language, onLanguageToggle }) => {
     <nav className="navbar">
       <div className="nav-container">
         <Link to="/" className="nav-logo">
-          <i className="fas fa-heart"></i>
-          Donor Project
+          <img src="/logo.png" alt="Nahdat Watan | نهضة وطن" className="nav-logo-img" />
+          <span className="nav-logo-text">Nahdat Watan | نهضة وطن</span>
         </Link>
         
         <ul className={`nav-menu ${isMenuOpen ? 'active' : ''}`}>

@@ -208,6 +208,94 @@
     font-family: inherit !important;
 }
 
+/* Custom Logout Button Styles */
+.custom-logout-btn {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+    color: white !important;
+    border: 1px solid rgba(220, 38, 38, 0.3) !important;
+    border-radius: 10px !important;
+    padding: 12px 18px !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    letter-spacing: 0.3px !important;
+    text-transform: none !important;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    cursor: pointer !important;
+    font-family: inherit !important;
+    position: relative !important;
+}
+
+.custom-logout-btn:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35) !important;
+    border-color: rgba(220, 38, 38, 0.5) !important;
+}
+
+.custom-logout-btn:active {
+    transform: translateY(0) !important;
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3) !important;
+}
+
+.custom-logout-btn:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2), 0 2px 8px rgba(239, 68, 68, 0.25) !important;
+}
+
+.custom-logout-btn:disabled {
+    opacity: 0.7 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+}
+
+.custom-logout-btn .logout-icon {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: white !important;
+    font-size: 16px !important;
+    transition: transform 0.3s ease !important;
+    flex-shrink: 0 !important;
+}
+
+.custom-logout-btn:hover .logout-icon {
+    transform: scale(1.1) !important;
+}
+
+.custom-logout-btn .logout-text {
+    font-weight: 600 !important;
+    color: white !important;
+}
+
+/* Welcome Section Styles */
+.welcome-section {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin-top: 8px !important;
+    color: black !important;
+}
+
+.welcome-icon {
+    color: #000000 !important;
+    flex-shrink: 0 !important;
+}
+
+.welcome-text {
+    color: #ffffff !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+}
+
+.welcome-text strong {
+    color: #ffffff !important;
+    font-weight: 600 !important;
+}
+
 .logout-btn:hover {
     background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
     transform: translateY(-2px);

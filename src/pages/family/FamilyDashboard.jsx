@@ -1078,7 +1078,7 @@ const FamilyDashboard = () => {
             <h3>Case Rejected</h3>
           </div>
           <div className="notification-content">
-            <p>Unfortunately, your case has been rejected by our checker.</p>
+            <p>Unfortunately, your case has been rejected by our checker the case are delete after 1 week.</p>
             <div className="rejection-details">
               <div className="detail-item">
                 <strong>Reason:</strong> {caseStatus.rejectionReason}
@@ -1456,7 +1456,6 @@ const FamilyDashboard = () => {
   if (loading) {
     return (
       <div className="dashboard-page">
-        <Navbar language={language} onLanguageToggle={toggleLanguage} />
         <div className="loading-container">
           <div className="loading-spinner">
             <i className="fas fa-spinner fa-spin"></i>

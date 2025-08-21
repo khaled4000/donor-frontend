@@ -260,36 +260,147 @@ class ApiService {
     });
   }
 
-  // Checker APIs
+  // Checker APIs with Admin Headers
+  static getCheckerAuthHeaders() {
+    // Use admin auth storage for checker operations
+    const authData = adminAuthStorage.getAuth();
+    const token = authData.token;
+    
+    if (DEBUG_MODE) {
+      console.log('🔍 CHECKER AUTH DEBUG - Auth data:', authData);
+      console.log('🔍 CHECKER AUTH DEBUG - Token exists:', !!token);
+    }
+    
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
+  }
+
+  static async checkerRequest(endpoint, options = {}) {
+    const url = `${API_BASE_URL}${endpoint}`;
+    const config = {
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getCheckerAuthHeaders(),
+        ...options.headers,
+      },
+      ...options,
+    };
+
+    if (DEBUG_MODE) {
+      console.log('🔍 CHECKER API DEBUG - Request URL:', url);
+      console.log('🔍 CHECKER API DEBUG - Request config:', config);
+    }
+
+    try {
+      const response = await fetch(url, config);
+      
+      let data;
+      try {
+        data = await response.json();
+        if (DEBUG_MODE) {
+          console.log('🔍 CHECKER API DEBUG - Response data:', data);
+        }
+      } catch (parseError) {
+        throw new Error(`Server returned invalid JSON. Status: ${response.status}`);
+      }
+
+      if (!response.ok) {
+        const errorMessage = data.message || data.error || `HTTP error! status: ${response.status}`;
+        if (DEBUG_MODE) {
+          console.error('❌ CHECKER API ERROR:', errorMessage);
+        }
+        throw new Error(errorMessage);
+      }
+
+      return data;
+    } catch (error) {
+      if (DEBUG_MODE) {
+        console.error('❌ CHECKER API ERROR:', error);
+      }
+      throw error;
+    }
+  }
+
   static async getCheckerCases() {
-    return this.request('/checker/cases');
+    return this.checkerRequest('/checker/cases');
   }
 
   static async getCheckerStats() {
-    return this.request('/checker/stats');
+    return this.checkerRequest('/checker/stats');
   }
 
   static async getCheckerCase(caseId) {
-    return this.request(`/checker/cases/${caseId}`);
+    return this.checkerRequest(`/checker/cases/${caseId}`);
   }
 
-  static async assignCaseToSelf(caseId, notes = '') {
-    return this.request(`/checker/cases/${caseId}/assign-to-me`, {
+  static async assignCaseToChecker(caseId, checkerData) {
+    return this.checkerRequest(`/checker/cases/${caseId}/assign`, {
       method: 'POST',
-      body: JSON.stringify({ notes }),
+      body: JSON.stringify(checkerData),
     });
   }
 
-  static async submitCheckerDecision(caseId, decision, data) {
-    return this.request(`/checker/cases/${caseId}/decision`, {
+  // Fixed checker decision submission
+  static async submitCheckerDecision(caseId, decisionData) {
+    // Validate required fields
+    if (!decisionData.decision) {
+      throw new Error('Decision is required');
+    }
+    
+    if (!decisionData.comments || !decisionData.comments.trim()) {
+      throw new Error('Comments are required');
+    }
+
+    // Build the payload with proper validation
+    const payload = {
+      decision: decisionData.decision,
+      comments: decisionData.comments.trim(),
+      checkerId: decisionData.checkerId,
+      checkerName: decisionData.checkerName || 'Unknown Checker',
+      reviewCompletedAt: new Date().toISOString(),
+    };
+
+    // Add assessment fields only for approved cases
+    if (decisionData.decision === 'approved') {
+      if (!decisionData.finalDamagePercentage && !decisionData.finalDestructionPercentage) {
+        throw new Error('Damage percentage is required for approval');
+      }
+      
+      if (!decisionData.estimatedCost && !decisionData.finalRebuildingCost) {
+        throw new Error('Estimated cost is required for approval');
+      }
+
+      // Use the correct field names and ensure they're numbers
+      const damagePercentage = parseFloat(
+        decisionData.finalDamagePercentage || decisionData.finalDestructionPercentage
+      );
+      const estimatedCost = parseFloat(
+        decisionData.estimatedCost || decisionData.finalRebuildingCost
+      );
+
+      if (isNaN(damagePercentage) || damagePercentage < 0 || damagePercentage > 100) {
+        throw new Error('Invalid damage percentage');
+      }
+
+      if (isNaN(estimatedCost) || estimatedCost <= 0) {
+        throw new Error('Invalid estimated cost');
+      }
+
+      payload.finalDamagePercentage = damagePercentage;
+      payload.estimatedCost = estimatedCost;
+      
+      // Include field notes if provided
+      if (decisionData.fieldNotes) {
+        payload.fieldNotes = decisionData.fieldNotes;
+      }
+    }
+
+    if (DEBUG_MODE) {
+      console.log('🔍 CHECKER DECISION DEBUG - Payload:', payload);
+    }
+
+    return this.checkerRequest(`/checker/cases/${caseId}/decision`, {
       method: 'POST',
-      body: JSON.stringify({
-        decision,
-        comments: data.comments,
-        finalDamagePercentage: data.finalDamagePercentage,
-        estimatedCost: data.estimatedCost,
-        fieldNotes: data.fieldNotes,
-      }),
+      body: JSON.stringify(payload),
     });
   }
 
@@ -387,7 +498,7 @@ class ApiService {
   }
 
   // Get checker statistics
-  static async getCheckerStats() {
+  static async getCheckerManagementStats() {
     return this.adminRequest('/admin/checker-management/checkers/stats/overview');
   }
 }

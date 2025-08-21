@@ -57,20 +57,30 @@ const CheckerManagement = () => {
     newPassword: ''
   });
 
-  // Load checkers and stats
+  // Load checkers and stats using admin API methods
   const loadCheckers = useCallback(async () => {
     try {
       setIsLoading(true);
+      
+      // Use admin API methods instead of checker methods
       const [checkersResponse, statsResponse] = await Promise.all([
         ApiService.getCheckers({ status: statusFilter }),
-        ApiService.getCheckerStats()
+        ApiService.getCheckerManagementStats() // This is the correct admin method
       ]);
       
-      setCheckers(checkersResponse.checkers || []);
-      setCheckerStats(statsResponse.stats || {});
+      setCheckers(checkersResponse.checkers || checkersResponse.data || []);
+      setCheckerStats(statsResponse.stats || statsResponse.data || {});
     } catch (error) {
       console.error('Error loading checkers:', error);
-      toast.error('Failed to load checkers');
+      
+      // More specific error handling
+      if (error.message.includes("403")) {
+        toast.error('Access denied. Admin privileges required.');
+      } else if (error.message.includes("401")) {
+        toast.error('Session expired. Please log in again.');
+      } else {
+        toast.error('Failed to load checkers');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -83,9 +93,11 @@ const CheckerManagement = () => {
   // Filter checkers based on search term and status
   const filteredCheckers = checkers.filter(checker => {
     const matchesSearch = !searchTerm || 
-      checker.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      checker.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (checker.username && checker.username.toLowerCase().includes(searchTerm.toLowerCase()));
+      (checker.name && checker.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (checker.email && checker.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (checker.username && checker.username.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (checker.firstName && checker.firstName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (checker.lastName && checker.lastName.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesStatus = statusFilter === 'all' || 
       (statusFilter === 'active' && checker.isActive) ||
@@ -98,6 +110,22 @@ const CheckerManagement = () => {
   const handleCreateChecker = async (e) => {
     e.preventDefault();
     try {
+      // Validate form data
+      if (!createForm.firstName.trim() || !createForm.lastName.trim()) {
+        toast.error('First name and last name are required');
+        return;
+      }
+      
+      if (!createForm.email.trim()) {
+        toast.error('Email is required');
+        return;
+      }
+      
+      if (!createForm.password || createForm.password.length < 6) {
+        toast.error('Password must be at least 6 characters long');
+        return;
+      }
+
       await ApiService.createChecker(createForm);
       toast.success('Checker created successfully');
       setShowCreateModal(false);
@@ -122,7 +150,18 @@ const CheckerManagement = () => {
   const handleEditChecker = async (e) => {
     e.preventDefault();
     try {
-      await ApiService.updateChecker(selectedChecker.id, editForm);
+      if (!selectedChecker) {
+        toast.error('No checker selected');
+        return;
+      }
+
+      // Remove empty password field to avoid updating it
+      const updateData = { ...editForm };
+      if (!updateData.newPassword || updateData.newPassword.trim() === '') {
+        delete updateData.newPassword;
+      }
+
+      await ApiService.updateChecker(selectedChecker.id, updateData);
       toast.success('Checker updated successfully');
       setShowEditModal(false);
       setSelectedChecker(null);
@@ -136,6 +175,11 @@ const CheckerManagement = () => {
   // Handle delete checker
   const handleDeleteChecker = async () => {
     try {
+      if (!checkerToDelete) {
+        toast.error('No checker selected for deletion');
+        return;
+      }
+
       await ApiService.deleteChecker(checkerToDelete.id);
       toast.success('Checker deleted successfully');
       setShowDeleteConfirm(false);
@@ -163,13 +207,13 @@ const CheckerManagement = () => {
   const openEditModal = (checker) => {
     setSelectedChecker(checker);
     setEditForm({
-      firstName: checker.firstName,
-      lastName: checker.lastName,
+      firstName: checker.firstName || '',
+      lastName: checker.lastName || '',
       username: checker.username || '',
-      email: checker.email,
+      email: checker.email || '',
       phone: checker.phone || '',
       address: checker.address || '',
-      isActive: checker.isActive,
+      isActive: checker.isActive !== false, // Default to true if undefined
       newPassword: ''
     });
     setShowEditModal(true);
@@ -179,6 +223,17 @@ const CheckerManagement = () => {
   const openDeleteConfirm = (checker) => {
     setCheckerToDelete(checker);
     setShowDeleteConfirm(true);
+  };
+
+  // Helper function to get checker display name
+  const getCheckerDisplayName = (checker) => {
+    if (checker.name) return checker.name;
+    if (checker.firstName && checker.lastName) {
+      return `${checker.firstName} ${checker.lastName}`;
+    }
+    if (checker.firstName) return checker.firstName;
+    if (checker.lastName) return checker.lastName;
+    return checker.email || 'Unknown Checker';
   };
 
   if (isLoading) {
@@ -304,7 +359,7 @@ const CheckerManagement = () => {
                 <td>
                   <div className="checker-details">
                     <div className="checker-name">
-                      <strong>{checker.name}</strong>
+                      <strong>{getCheckerDisplayName(checker)}</strong>
                       {checker.username && (
                         <span className="username">@{checker.username}</span>
                       )}
@@ -361,7 +416,7 @@ const CheckerManagement = () => {
                 <td>
                   <div className="creation-info">
                     <div className="creation-date">
-                      {new Date(checker.createdAt).toLocaleDateString()}
+                      {checker.createdAt ? new Date(checker.createdAt).toLocaleDateString() : 'N/A'}
                     </div>
                     <div className="creation-method">
                       {checker.creationMethod === 'admin_created' ? (
@@ -378,7 +433,7 @@ const CheckerManagement = () => {
                     </div>
                     {checker.createdBy && (
                       <div className="created-by">
-                        by {checker.createdBy.name}
+                        by {checker.createdBy.name || 'Unknown'}
                       </div>
                     )}
                   </div>
@@ -567,7 +622,7 @@ const CheckerManagement = () => {
         <div className="modal-overlay">
           <div className="modal-content">
             <div className="modal-header">
-              <h3>Edit Checker: {selectedChecker.name}</h3>
+              <h3>Edit Checker: {getCheckerDisplayName(selectedChecker)}</h3>
               <button
                 onClick={() => setShowEditModal(false)}
                 className="modal-close"
@@ -696,7 +751,7 @@ const CheckerManagement = () => {
               </div>
               <h4>Are you sure you want to delete this checker?</h4>
               <p>
-                <strong>{checkerToDelete.name}</strong> ({checkerToDelete.email})
+                <strong>{getCheckerDisplayName(checkerToDelete)}</strong> ({checkerToDelete.email})
               </p>
               <p className="warning-text">
                 This action cannot be undone. The checker will be permanently removed 

@@ -121,6 +121,13 @@ export const AuthProvider = ({ children }) => {
       return response;
     } catch (error) {
       console.error('Registration failed:', error);
+      
+      // Enhance error with more context
+      if (error.message && error.message.includes('User already exists')) {
+        error.userExists = true;
+        error.suggestedAction = 'login';
+      }
+      
       throw error;
     } finally {
       setLoading(false);

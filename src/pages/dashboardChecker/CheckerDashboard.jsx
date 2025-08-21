@@ -19,7 +19,7 @@ const CheckerDashboard = () => {
   const [stats, setStats] = useState({});
   const [selectedCase, setSelectedCase] = useState(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
-  const [activeView, setActiveView] = useState("cards"); // 'cards' or 'map'
+  const [activeView, setActiveView] = useState("cards");
   const [filters, setFilters] = useState({
     status: "all",
     village: "all",
@@ -27,23 +27,16 @@ const CheckerDashboard = () => {
     search: "",
   });
 
-  // Check authentication and load initial data
+  // Authentication check and initialization
   useEffect(() => {
     const authData = adminAuthStorage.getAuth();
-    console.log("🔍 CHECKER AUTH - Checking authentication:", authData);
-
+    
     if (!authData.isAuthenticated || !authData.user) {
-      console.log(
-        "❌ CHECKER AUTH - Not authenticated, redirecting to admin login"
-      );
       navigate("/admin/login");
       return;
     }
 
     if (authData.user.role !== "checker") {
-      console.log(
-        "❌ CHECKER AUTH - User is not a checker, redirecting to appropriate dashboard"
-      );
       if (authData.user.role === "admin") {
         navigate("/admin/dashboard");
       } else {
@@ -56,38 +49,23 @@ const CheckerDashboard = () => {
     loadDashboardData();
   }, [navigate]);
 
+  // Load dashboard data
   const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true);
-      console.log("🔍 CHECKER - Loading dashboard data...");
-
-      // Load cases and stats in parallel
+      
       const [casesResponse, statsResponse] = await Promise.all([
-        ApiService.request("/checker/cases", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${adminAuthStorage.getAuth().token}`,
-          },
-        }),
-        ApiService.request("/checker/stats", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${adminAuthStorage.getAuth().token}`,
-          },
-        }),
+        ApiService.getCheckerCases(),
+        ApiService.getCheckerStats(),
       ]);
 
-      console.log(
-        "🔍 CHECKER - Cases loaded:",
-        casesResponse.cases?.length || 0
-      );
-      console.log("🔍 CHECKER - Stats loaded:", statsResponse.stats);
-
-      setCases(casesResponse.cases || []);
-      setFilteredCases(casesResponse.cases || []);
-      setStats(statsResponse.stats || {});
+      setCases(casesResponse.cases || casesResponse.data || []);
+      setFilteredCases(casesResponse.cases || casesResponse.data || []);
+      setStats(statsResponse.stats || statsResponse.data || {});
+      
     } catch (error) {
-      console.error("❌ CHECKER - Error loading dashboard data:", error);
+      console.error("Error loading dashboard data:", error);
+      
       if (error.message.includes("401") || error.message.includes("403")) {
         toast.error("Session expired. Please log in again.");
         handleLogout();
@@ -103,7 +81,7 @@ const CheckerDashboard = () => {
   useEffect(() => {
     let filtered = [...cases];
 
-    // Status filter
+    // Apply filters
     if (filters.status !== "all") {
       if (filters.status === "pending") {
         filtered = filtered.filter((c) =>
@@ -114,19 +92,16 @@ const CheckerDashboard = () => {
       }
     }
 
-    // Village filter
     if (filters.village !== "all") {
       filtered = filtered.filter(
         (c) => c.familyData?.village === filters.village
       );
     }
 
-    // Priority filter
     if (filters.priority !== "all") {
       filtered = filtered.filter((c) => c.priority === filters.priority);
     }
 
-    // Search filter
     if (filters.search.trim()) {
       const searchTerm = filters.search.toLowerCase().trim();
       filtered = filtered.filter(
@@ -138,7 +113,7 @@ const CheckerDashboard = () => {
       );
     }
 
-    // Sort by priority and submission date
+    // Sort by priority and date
     filtered.sort((a, b) => {
       const priorityOrder = { high: 3, medium: 2, low: 1 };
       const priorityDiff =
@@ -146,7 +121,6 @@ const CheckerDashboard = () => {
 
       if (priorityDiff !== 0) return priorityDiff;
 
-      // If same priority, sort by submission date (older first)
       const dateA = new Date(a.timestamps?.submitted || a.timestamps?.created);
       const dateB = new Date(b.timestamps?.submitted || b.timestamps?.created);
       return dateA - dateB;
@@ -155,118 +129,157 @@ const CheckerDashboard = () => {
     setFilteredCases(filtered);
   }, [cases, filters]);
 
+  // Handle logout
   const handleLogout = () => {
-    console.log("🔓 CHECKER - Logging out user");
     adminAuthStorage.clearAuth();
-
-    // Clear session storage and prevent back navigation
+    
     if (typeof window !== "undefined") {
       sessionStorage.clear();
       window.history.pushState(null, "", window.location.href);
-
-      const handlePopState = () => {
-        window.history.pushState(null, "", window.location.href);
-      };
-
-      window.addEventListener("popstate", handlePopState);
-
-      setTimeout(() => {
-        window.removeEventListener("popstate", handlePopState);
-      }, 1000);
     }
 
     navigate("/login", { replace: true });
   };
 
+  // Handle case click to open review modal
   const handleCaseClick = async (caseItem) => {
     try {
-      console.log("🔍 CHECKER - Loading detailed case:", caseItem.caseId);
+      // Try to load detailed case data
+      let detailedCase = caseItem;
+      
+      try {
+        const response = await ApiService.getCheckerCase(caseItem.caseId);
+        detailedCase = response.case || response.data || response;
+      } catch (detailError) {
+        console.warn("Failed to load detailed case data, using available data:", detailError.message);
+        // Use existing case data if detailed fetch fails
+      }
 
-      const response = await ApiService.request(
-        `/checker/cases/${caseItem.caseId}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${adminAuthStorage.getAuth().token}`,
-          },
-        }
-      );
-
-      setSelectedCase(response.case);
+      setSelectedCase(detailedCase);
       setShowReviewModal(true);
+
     } catch (error) {
-      console.error("❌ CHECKER - Error loading case details:", error);
-      toast.error("Failed to load case details. Please try again.");
+      console.error("Error loading case details:", error);
+      
+      if (error.message.includes("401") || error.message.includes("403")) {
+        toast.error("Session expired. Please log in again.");
+        handleLogout();
+      } else {
+        toast.error("Failed to load case details. Please try again.");
+      }
     }
   };
 
+  // Handle case assignment
   const handleCaseAssignment = async (caseId) => {
     try {
-      console.log("🔍 CHECKER - Assigning case to self:", caseId);
+      const checkerData = {
+        checkerId: user?.id,
+        checkerName: user?.name || user?.firstName,
+        assignedAt: new Date().toISOString(),
+        notes: `Case assigned to ${user?.name || user?.firstName}`,
+      };
 
-      await ApiService.request(`/checker/cases/${caseId}/assign-to-me`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${adminAuthStorage.getAuth().token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          notes: "Self-assigned for review",
-        }),
-      });
+      await ApiService.assignCaseToChecker(caseId, checkerData);
+      toast.success("Case assigned successfully!");
+      await loadDashboardData();
 
-      toast.success("Case assigned to you successfully!");
-      loadDashboardData(); // Reload data
     } catch (error) {
-      console.error("❌ CHECKER - Error assigning case:", error);
-      toast.error("Failed to assign case. Please try again.");
+      console.error("Error assigning case:", error);
+      
+      if (error.message.includes("403")) {
+        toast.error("You don't have permission to assign this case.");
+      } else if (error.message.includes("401")) {
+        toast.error("Session expired. Please log in again.");
+        handleLogout();
+      } else {
+        toast.error("Failed to assign case. Please try again.");
+      }
     }
   };
 
-  const handleCaseDecision = async (caseId, decision, data) => {
+  // Handle case decision (approve/reject)
+  const handleCaseDecision = async (decision, assessmentData) => {
     try {
-      console.log("🔍 CHECKER - Submitting case decision:", {
-        caseId,
-        decision,
-        data,
-      });
+      // Validate user session
+      if (!user || !user.id) {
+        toast.error('User session is invalid. Please refresh and try again.');
+        return;
+      }
 
-      const response = await ApiService.request(
-        `/checker/cases/${caseId}/decision`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${adminAuthStorage.getAuth().token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            decision,
-            comments: data.comments,
-            finalDamagePercentage: data.finalDamagePercentage,
-            estimatedCost: data.estimatedCost,
-            fieldNotes: data.fieldNotes,
-          }),
+      // Validate required fields for approval
+      if (decision === "approved") {
+        if (!assessmentData.finalDamagePercentage && !assessmentData.finalDestructionPercentage) {
+          throw new Error("Please provide a valid destruction percentage (0-100%)");
         }
-      );
 
-      toast.success(`Case ${decision} successfully!`);
+        if (!assessmentData.estimatedCost && !assessmentData.finalRebuildingCost) {
+          throw new Error("Please provide a valid rebuilding cost");
+        }
+      }
+
+      // Ensure we have valid assessment data
+      if (!assessmentData || !assessmentData.comments || !assessmentData.comments.trim()) {
+        throw new Error("Comments are required for all decisions");
+      }
+
+      // Build the request payload with proper field mapping
+      const decisionPayload = {
+        decision: decision,
+        comments: assessmentData.comments.trim(),
+        checkerId: user.id,
+        checkerName: user.name || user.firstName || 'Unknown Checker',
+      };
+
+      // Map the fields correctly for approval
+      if (decision === "approved") {
+        // Use the correct field names based on what the API expects
+        decisionPayload.finalDamagePercentage = parseFloat(
+          assessmentData.finalDamagePercentage || assessmentData.finalDestructionPercentage
+        );
+        decisionPayload.estimatedCost = parseFloat(
+          assessmentData.estimatedCost || assessmentData.finalRebuildingCost
+        );
+
+        // Add field notes if available
+        if (assessmentData.fieldNotes) {
+          decisionPayload.fieldNotes = assessmentData.fieldNotes;
+        }
+      }
+
+      console.log('Dashboard sending payload:', decisionPayload); // Debug log
+
+      await ApiService.submitCheckerDecision(selectedCase.caseId, decisionPayload);
+
+      const decisionText = decision === "approved" ? "approved" : "rejected";
+      toast.success(`Case ${decisionText} successfully!`);
+
+      // Close modal and refresh data
       setShowReviewModal(false);
       setSelectedCase(null);
-      loadDashboardData(); // Reload data
+      await loadDashboardData();
 
-      return response;
     } catch (error) {
-      console.error("❌ CHECKER - Error submitting decision:", error);
-      const errorMessage = error.message || "Failed to submit decision";
-      toast.error(errorMessage);
-      throw error;
+      console.error("Error submitting decision:", error);
+      
+      // More specific error handling
+      if (error.message.includes("401") || error.message.includes("403")) {
+        toast.error("Session expired. Please log in again.");
+        handleLogout();
+      } else if (error.message.includes("400")) {
+        toast.error(error.message || "Invalid data submitted. Please check all fields and try again.");
+      } else {
+        toast.error(error.message || "Failed to submit decision. Please try again.");
+      }
     }
   };
 
+  // Handle filter changes
   const handleFilterChange = (newFilters) => {
     setFilters((prev) => ({ ...prev, ...newFilters }));
   };
 
+  // Get village options for filter
   const getVillageOptions = () => {
     const villages = [
       ...new Set(cases.map((c) => c.familyData?.village).filter(Boolean)),
@@ -293,39 +306,70 @@ const CheckerDashboard = () => {
           <div className="header-left">
             <h1>Field Checker Dashboard</h1>
             <p>Welcome back, {user?.name || user?.firstName}</p>
+            <div className="checker-info">
+              <span className="checker-badge">
+                <i className="fas fa-shield-alt"></i>
+                Field Checker
+              </span>
+              <span className="active-cases-count">
+                {filteredCases.filter(c => c.assignedTo === user?.id && c.status === "under_review").length} Active Cases
+              </span>
+            </div>
           </div>
           <div className="header-right">
-            <div className="view-toggle">
+            <div className="header-actions">
+              <div className="quick-stats">
+                <div className="stat-item">
+                  <span className="stat-number">
+                    {filteredCases.filter(c => c.status === "approved" && c.finalChecker?.id === user?.id).length}
+                  </span>
+                  <span className="stat-label">Approved</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-number">
+                    {filteredCases.filter(c => c.status === "under_review" && c.assignedTo === user?.id).length}
+                  </span>
+                  <span className="stat-label">In Review</span>
+                </div>
+              </div>
+              
+              <div className="view-toggle">
+                <button
+                  className={`toggle-btn ${activeView === "cards" ? "active" : ""}`}
+                  onClick={() => setActiveView("cards")}
+                >
+                  <i className="fas fa-th-large"></i>
+                  Cases
+                </button>
+                <button
+                  className={`toggle-btn ${activeView === "map" ? "active" : ""}`}
+                  onClick={() => setActiveView("map")}
+                >
+                  <i className="fas fa-map-marker-alt"></i>
+                  Map
+                </button>
+              </div>
               <button
-                className={`toggle-btn ${
-                  activeView === "cards" ? "active" : ""
-                }`}
-                onClick={() => setActiveView("cards")}
+                className="logout-btn"
+                onClick={handleLogout}
+                title="Logout"
               >
-                <i className="fas fa-th-large"></i>
-                Cases
-              </button>
-              <button
-                className={`toggle-btn ${activeView === "map" ? "active" : ""}`}
-                onClick={() => setActiveView("map")}
-              >
-                <i className="fas fa-map-marker-alt"></i>
-                Map
+                <i className="fas fa-sign-out-alt"></i>
               </button>
             </div>
-            <button
-              className="logout-btn"
-              onClick={handleLogout}
-              title="Logout"
-            >
-              <i className="fas fa-sign-out-alt"></i>
-            </button>
           </div>
         </div>
       </header>
 
       {/* Stats Overview */}
-      <StatsOverview stats={stats} />
+      <StatsOverview 
+        stats={{
+          ...stats,
+          approvedByMe: filteredCases.filter(c => c.status === "approved" && c.finalChecker?.id === user?.id).length,
+          myActiveCases: filteredCases.filter(c => c.assignedTo === user?.id && c.status === "under_review").length,
+          totalAssessed: filteredCases.filter(c => c.finalChecker?.id === user?.id).length,
+        }} 
+      />
 
       {/* Filters */}
       <FilterControls
@@ -347,13 +391,28 @@ const CheckerDashboard = () => {
                   onCaseClick={handleCaseClick}
                   onAssignCase={handleCaseAssignment}
                   currentCheckerId={user?.id}
+                  showCheckerInfo={true}
+                  showAssessmentStatus={true}
                 />
               ))
             ) : (
               <div className="no-cases">
                 <i className="fas fa-clipboard-list"></i>
                 <h3>No Cases Found</h3>
-                <p>No cases match your current filters.</p>
+                <p>
+                  {filters.status === "all" 
+                    ? "No cases match your current filters."
+                    : `No ${filters.status.replace('_', ' ')} cases found.`
+                  }
+                </p>
+                {filters.status !== "all" && (
+                  <button 
+                    className="clear-filters-btn"
+                    onClick={() => setFilters(prev => ({ ...prev, status: "all" }))}
+                  >
+                    Clear Filters
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -376,8 +435,9 @@ const CheckerDashboard = () => {
             setSelectedCase(null);
           }}
           onSubmitDecision={handleCaseDecision}
-          onAssignCase={handleCaseAssignment}
+          currentUser={user}
           currentCheckerId={user?.id}
+          isOpen={showReviewModal}
         />
       )}
     </div>

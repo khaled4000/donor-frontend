@@ -23,9 +23,9 @@ const Footer = () => {
           
           <div className="footer-section">
             <h3>Contact Info</h3>
-            <p>Email: info@donorproject.com</p>
-            <p>Phone: +961-XX-XXXXXX</p>
-            <p>Address: South Lebanon, Lebanon</p>
+            <p>Email: khaledkassem223@gmail.com</p>
+            <p>Phone: +96170142246</p>
+            <p>Address: Tripoli-North Lebanon</p>
           </div>
           
           <div className="footer-section">
@@ -40,7 +40,7 @@ const Footer = () => {
         </div>
         
         <div className="footer-bottom">
-          <p>&copy; 2025 South Lebanon Donor Project. All rights reserved.</p>
+          <p>&copy; 2025 Nahdat Watan | نهضة وطن. All rights reserved.</p>
         </div>
       </div>
     </footer>

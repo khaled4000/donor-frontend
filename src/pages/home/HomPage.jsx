@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { FaHome, FaUsers, FaCheckCircle, FaDollarSign, FaHandHoldingHeart, FaMapMarkedAlt, FaClipboardCheck, FaUpload, FaSearch, FaHeart } from "react-icons/fa";
 import Navbar from "../../components/Navbar/Navbar";
 import Footer from "../../components/Footer/Footer";
 import ImageSlider from "../../components/ImageSlider/ImageSlider";
@@ -7,6 +8,9 @@ import ApiService from "../../services/api";
 import "./Home-page.css";
 
 const HomePage = () => {
+  const location = useLocation();
+  const [showLogoutMessage, setShowLogoutMessage] = useState(false);
+  
   const [stats, setStats] = useState({
     familiesHelped: 0,
     villagesCovered: 0,
@@ -61,6 +65,34 @@ const HomePage = () => {
       }));
     }
   };
+
+  // Handle logout messages
+  useEffect(() => {
+    // Check for admin logout flag
+    if (sessionStorage.getItem('adminLogout') === 'true') {
+      setShowLogoutMessage(true);
+      sessionStorage.removeItem('adminLogout');
+      
+      // Auto-hide message after 5 seconds
+      const timer = setTimeout(() => {
+        setShowLogoutMessage(false);
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+    
+    // Check for location state logout
+    if (location.state?.fromLogout) {
+      setShowLogoutMessage(true);
+      
+      // Auto-hide message after 5 seconds
+      const timer = setTimeout(() => {
+        setShowLogoutMessage(false);
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     fetchStats();
@@ -220,10 +252,26 @@ const HomePage = () => {
     <div className="home-page">
       <Navbar />
 
+      {/* Logout Message */}
+      {showLogoutMessage && (
+        <div className="logout-message">
+          <div className="logout-message-content">
+            <i className="fas fa-check-circle"></i>
+            <span>You have been successfully logged out.</span>
+            <button 
+              className="logout-message-close"
+              onClick={() => setShowLogoutMessage(false)}
+            >
+              <i className="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Hero Section */}
       <section className="mainsection">
         <div className="hero-content">
-          <h1 className="hero-title">Rebuilding Hope in South Lebanon</h1>
+          <h2 className="hero-title">Rebuilding Hope in South Lebanon</h2>
           <p className="hero-subtitle">
             Help families whose homes were destroyed during wartime. Your
             donation goes directly to verified families in need.
@@ -236,10 +284,7 @@ const HomePage = () => {
                 <div className="stat-item loading">
                   <span className="stat-number">
                     {stats.loading ? (
-                      <span
-                        className="spinner-border spinner-border-sm me-2"
-                        role="status"
-                      ></span>
+                      <i className="fas fa-spinner fa-spin me-2"></i>
                     ) : null}
                     ---
                   </span>
@@ -248,10 +293,7 @@ const HomePage = () => {
                 <div className="stat-item loading">
                   <span className="stat-number">
                     {stats.loading ? (
-                      <span
-                        className="spinner-border spinner-border-sm me-2"
-                        role="status"
-                      ></span>
+                      <i className="fas fa-spinner fa-spin me-2"></i>
                     ) : null}
                     ---
                   </span>
@@ -260,10 +302,7 @@ const HomePage = () => {
                 <div className="stat-item loading">
                   <span className="stat-number">
                     {stats.loading ? (
-                      <span
-                        className="spinner-border spinner-border-sm me-2"
-                        role="status"
-                      ></span>
+                      <i className="fas fa-spinner fa-spin me-2"></i>
                     ) : null}
                     ---%
                   </span>
@@ -273,18 +312,27 @@ const HomePage = () => {
             ) : (
               <>
                 <div className="stat-item" data-stat="families">
+                  <div className="stat-icon-hero">
+                    <FaHandHoldingHeart size={24} color="#ed1c24" />
+                  </div>
                   <span className="stat-number">
                     {formatNumber(stats.familiesHelped)}
                   </span>
                   <span className="stat-label">Families Helped</span>
                 </div>
                 <div className="stat-item" data-stat="villages">
+                  <div className="stat-icon-hero">
+                    <FaMapMarkedAlt size={24} color="#17a2b8" />
+                  </div>
                   <span className="stat-number">
                     {formatNumber(stats.villagesCovered)}
                   </span>
                   <span className="stat-label">Villages Covered</span>
                 </div>
                 <div className="stat-item stat-item-verified" data-stat="verified">
+                  <div className="stat-icon-hero">
+                    <FaClipboardCheck size={24} color="#28a745" />
+                  </div>
                   <span className="stat-number">
                     {formatPercentage(stats.casesVerified)}
                   </span>
@@ -353,9 +401,8 @@ const HomePage = () => {
           <div className="row">
             <div className="col-lg-3 col-md-6">
               <div className="stat-card">
-                <div className="stat-icon ">
-                  <img src="/images/icon1.png" alt="Homes Destroyed Icon" />
-                  {/* <i className="fas fa-home"> </i> */}
+                <div className="stat-icon">
+                  <FaHome size={40} color="#ed1c24" />
                 </div>
                 <div className="stat-number-large">
                   {impactStats.loading
@@ -367,9 +414,8 @@ const HomePage = () => {
             </div>
             <div className="col-lg-3 col-md-6">
               <div className="stat-card">
-                <div className="stat-icon text-warning">
-                  <img src="/images/icon2.png" alt="People Affected Icon" />
-                  {/* <i className="fas fa-users"></i> */}
+                <div className="stat-icon">
+                  <FaUsers size={40} color="#ffc107" />
                 </div>
                 <div className="stat-number-large">
                   {impactStats.loading
@@ -381,8 +427,8 @@ const HomePage = () => {
             </div>
             <div className="col-lg-3 col-md-6">
               <div className="stat-card">
-                <div className="stat-icon text-success">
-                  <img src="/images/icon3.png" alt="Cases Verified Icon" />
+                <div className="stat-icon">
+                  <FaCheckCircle size={40} color="#28a745" />
                 </div>
                 <div className="stat-number-large">
                   {impactStats.loading
@@ -394,8 +440,8 @@ const HomePage = () => {
             </div>
             <div className="col-lg-3 col-md-6">
               <div className="stat-card">
-                <div className="stat-icon text-info">
-                  <img src="/images/icon4.png" alt="Funds Raised Icon" />
+                <div className="stat-icon">
+                  <FaDollarSign size={40} color="#17a2b8" />
                 </div>
                 <div className="stat-number-large">
                   {impactStats.loading
@@ -422,7 +468,7 @@ const HomePage = () => {
           <div className="features-grid">
             <div className="feature-card">
               <div className="feature-icon">
-                <i className="fas fa-upload"></i>
+                <FaUpload size={40} color="#e74c3c" />
               </div>
               <h3>1. Families Submit</h3>
               <p>
@@ -432,14 +478,14 @@ const HomePage = () => {
             </div>
             <div className="feature-card">
               <div className="feature-icon">
-                <i className="fas fa-search"></i>
+                <FaSearch size={40} color="#f39c12" />
               </div>
               <h3>2. Expert Verification</h3>
               <p>Trained auditors verify each case through investigation.</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">
-                <i className="fas fa-heart"></i>
+                <FaHeart size={40} color="#27ae60" />
               </div>
               <h3>3. Direct Aid</h3>
               <p>

@@ -12,6 +12,16 @@ const AdminRedirect = ({ children }) => {
 
   useEffect(() => {
     const checkAdminAuth = async () => {
+      // Check if we're coming from a logout FIRST
+      const isFromLogout = sessionStorage.getItem('adminLogout') === 'true';
+      
+      if (isFromLogout) {
+        // Clear the logout flag and don't redirect
+        sessionStorage.removeItem('adminLogout');
+        console.log('🔒 AdminRedirect: Detected logout, allowing access to home page');
+        return;
+      }
+      
       const authData = adminAuthStorage.getAuth();
       
       if (authData.isAuthenticated && authData.token) {
