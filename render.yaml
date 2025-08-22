@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: donor-project-frontend
+    env: static
+    region: oregon
+    plan: free
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://donor-backend-dxxd.onrender.com/api
+      - key: VITE_FRONTEND_URL
+        value: https://donor-frontend1.onrender.com
+      - key: VITE_DEBUG_MODE
+        value: false
+      - key: VITE_NODE_ENV
+        value: production
+    routes:
+      - type: rewrite
+        source: /(.*)
+        destination: /index.html
