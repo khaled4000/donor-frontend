@@ -1,7 +1,4 @@
-
-
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../authContext/AuthContext';
 import ApiService from '../../services/api';
@@ -14,8 +11,8 @@ const DonorDashboard = () => {
   const [activeTab, setActiveTab] = useState('browse');
   const [selectedRegion, setSelectedRegion] = useState('all');
   const [selectedDistrict, setSelectedDistrict] = useState(null);
-  const [approvedCases, setApprovedCases] = useState([]); // Changed from verifiedCases
-  const [fullyFundedCases, setFullyFundedCases] = useState([]); // New state for fully funded cases
+  const [approvedCases, setApprovedCases] = useState([]);
+  const [fullyFundedCases, setFullyFundedCases] = useState([]);
   const [donationHistory, setDonationHistory] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -31,6 +28,14 @@ const DonorDashboard = () => {
     familiesHelped: 0,
     thisMonth: 0
   });
+  
+  // Google Maps references
+  const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const markersRef = useRef([]);
+  const infoWindowRef = useRef(null);
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
+  
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -51,7 +56,464 @@ const DonorDashboard = () => {
     loadFullyFundedCases();
     loadUserDonationHistory();
     loadUserPreferences();
+    
+    // Load Google Maps when component mounts
+    loadGoogleMaps();
   }, [navigate, user]);
+
+  // Load Google Maps API (with fallback to embedded iframe)
+  const loadGoogleMaps = () => {
+    // For development/demo purposes, we'll use a fallback approach
+    // In production, replace 'DEMO_MODE' with your actual API key
+    const apiKey = 'DEMO_MODE'; // Replace with actual Google Maps API key
+    
+    if (apiKey === 'DEMO_MODE') {
+      // Use iframe fallback for demo
+      setIsMapLoaded(true);
+      return;
+    }
+
+    if (window.google && window.google.maps) {
+      setIsMapLoaded(true);
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=geometry`;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      setIsMapLoaded(true);
+    };
+    script.onerror = () => {
+      console.error('Failed to load Google Maps API');
+      setIsMapLoaded(true); // Fallback to iframe mode
+    };
+    document.head.appendChild(script);
+  };
+
+  // Initialize Google Map or fallback to iframe
+  const initializeMap = () => {
+    if (!isMapLoaded || !mapRef.current || mapInstanceRef.current) return;
+
+    // Check if we have Google Maps API available
+    if (window.google && window.google.maps) {
+      initializeGoogleMap();
+    } else {
+      initializeIframeMap();
+    }
+  };
+
+  // Initialize Google Maps (when API is available)
+  const initializeGoogleMap = () => {
+    const southLebanonCenter = { lat: 33.2774, lng: 35.2044 };
+    
+    const map = new window.google.maps.Map(mapRef.current, {
+      zoom: selectedDistrict ? 12 : 9,
+      center: southLebanonCenter,
+      styles: [
+        {
+          featureType: 'water',
+          elementType: 'geometry',
+          stylers: [{ color: '#e9e9e9' }, { lightness: 17 }]
+        },
+        {
+          featureType: 'landscape',
+          elementType: 'geometry',
+          stylers: [{ color: '#f5f5f5' }, { lightness: 20 }]
+        },
+        {
+          featureType: 'road.highway',
+          elementType: 'geometry.fill',
+          stylers: [{ color: '#ffffff' }, { lightness: 17 }]
+        },
+        {
+          featureType: 'road.highway',
+          elementType: 'geometry.stroke',
+          stylers: [{ color: '#ffffff' }, { lightness: 29 }, { weight: 0.2 }]
+        },
+        {
+          featureType: 'road.arterial',
+          elementType: 'geometry',
+          stylers: [{ color: '#ffffff' }, { lightness: 18 }]
+        },
+        {
+          featureType: 'road.local',
+          elementType: 'geometry',
+          stylers: [{ color: '#ffffff' }, { lightness: 16 }]
+        },
+        {
+          featureType: 'poi',
+          elementType: 'geometry',
+          stylers: [{ color: '#f5f5f5' }, { lightness: 21 }]
+        }
+      ],
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: true,
+    });
+
+    mapInstanceRef.current = map;
+    infoWindowRef.current = new window.google.maps.InfoWindow();
+    addMarkersToMap();
+  };
+
+  // Initialize iframe-based map (fallback)
+  const initializeIframeMap = () => {
+    const mapQuery = selectedDistrict 
+      ? encodeURIComponent(`${selectedDistrict.name}, Lebanon`)
+      : 'South+Governorate,+Lebanon';
+    
+    const zoom = selectedDistrict ? 12 : 9;
+    
+    mapRef.current.innerHTML = `
+      <div style="position: relative; width: 100%; height: 100%; border-radius: 12px; overflow: hidden;">
+        <iframe
+          src="https://www.google.com/maps?q=${mapQuery}&output=embed&z=${zoom}"
+          width="100%"
+          height="100%"
+          style="border: 0; border-radius: 12px;"
+          allowfullscreen=""
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          title="${selectedDistrict ? `${selectedDistrict.name} District Map` : 'South Lebanon Districts Map'}"
+        ></iframe>
+        <div class="map-overlay-info" style="
+          position: absolute;
+          top: 20px;
+          left: 20px;
+          background: rgba(255, 255, 255, 0.95);
+          padding: 16px;
+          border-radius: 8px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          max-width: 280px;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        ">
+          <h4 style="margin: 0 0 8px 0; color: #1f2937; font-size: 16px;">
+            ${selectedDistrict ? selectedDistrict.name : 'South Lebanon'}
+          </h4>
+          <div style="color: #6b7280; font-size: 14px; line-height: 1.4;">
+            <div style="margin-bottom: 4px;">
+              📍 <strong>${filteredCases.length}</strong> cases in this area
+            </div>
+            <div style="margin-bottom: 4px;">
+              ❤️ <strong>${filteredCases.filter(c => c.progress < 100).length}</strong> need funding
+            </div>
+            <div style="margin-bottom: 4px;">
+              ✅ <strong>${filteredCases.filter(c => c.progress >= 100).length}</strong> fully funded
+            </div>
+            <div>
+              💰 <strong>$${filteredCases.reduce((sum, c) => sum + (c.totalDonations || 0), 0).toLocaleString()}</strong> raised
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
+  // Add markers to map for all cases (only when Google Maps API is available)
+  const addMarkersToMap = () => {
+    if (!mapInstanceRef.current || !window.google) return;
+
+    // Clear existing markers
+    clearMarkers();
+
+    const casesToShow = selectedDistrict ? getFilteredCases() : [...approvedCases, ...fullyFundedCases];
+    
+    casesToShow.forEach(caseItem => {
+      // Generate approximate coordinates based on village name
+      // In a real application, you'd store actual lat/lng in your database
+      const coordinates = getVillageCoordinates(caseItem.location);
+      
+      if (coordinates) {
+        const marker = new window.google.maps.Marker({
+          position: coordinates,
+          map: mapInstanceRef.current,
+          title: `${caseItem.family} - ${caseItem.location}`,
+          icon: {
+            url: caseItem.progress >= 100 
+              ? 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="16" cy="16" r="14" fill="#10B981" stroke="#fff" stroke-width="2"/>
+                  <path d="M10 16l4 4 8-8" stroke="#fff" stroke-width="2" fill="none"/>
+                </svg>`)
+              : 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="16" cy="16" r="14" fill="#EF4444" stroke="#fff" stroke-width="2"/>
+                  <path d="M16 8v8M16 20v2" stroke="#fff" stroke-width="2" fill="none"/>
+                </svg>`),
+            scaledSize: new window.google.maps.Size(32, 32),
+            anchor: new window.google.maps.Point(16, 16)
+          }
+        });
+
+        // Add click listener for info window
+        marker.addListener('click', () => {
+          const contentString = `
+            <div style="
+              padding: 16px; 
+              min-width: 280px; 
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              line-height: 1.5;
+            ">
+              <div style="
+                display: flex; 
+                justify-content: space-between; 
+                align-items: flex-start; 
+                margin-bottom: 12px;
+                border-bottom: 1px solid #e5e7eb;
+                padding-bottom: 12px;
+              ">
+                <div>
+                  <h3 style="
+                    margin: 0 0 4px 0; 
+                    font-size: 18px; 
+                    font-weight: 600; 
+                    color: #1f2937;
+                  ">${caseItem.family}</h3>
+                  <p style="
+                    margin: 0; 
+                    color: #6b7280; 
+                    font-size: 14px;
+                  ">${caseItem.caseId}</p>
+                </div>
+                ${caseItem.progress >= 100 ? `
+                  <span style="
+                    background: #dcfce7; 
+                    color: #166534; 
+                    padding: 4px 8px; 
+                    border-radius: 16px; 
+                    font-size: 12px; 
+                    font-weight: 500;
+                  ">✓ Fully Funded</span>
+                ` : `
+                  <span style="
+                    background: #fef3c7; 
+                    color: #92400e; 
+                    padding: 4px 8px; 
+                    border-radius: 16px; 
+                    font-size: 12px; 
+                    font-weight: 500;
+                  ">Needs Funding</span>
+                `}
+              </div>
+              
+              <div style="margin-bottom: 12px;">
+                <div style="display: flex; align-items: center; margin-bottom: 6px;">
+                  <span style="color: #ef4444; margin-right: 8px;">📍</span>
+                  <span style="color: #374151; font-size: 14px;">${caseItem.location}</span>
+                </div>
+                <div style="display: flex; align-items: center; margin-bottom: 6px;">
+                  <span style="color: #3b82f6; margin-right: 8px;">👨‍👩‍👧‍👦</span>
+                  <span style="color: #374151; font-size: 14px;">${caseItem.familySize}</span>
+                </div>
+                ${caseItem.damagePercentage ? `
+                  <div style="display: flex; align-items: center; margin-bottom: 6px;">
+                    <span style="color: #f59e0b; margin-right: 8px;">⚠️</span>
+                    <span style="color: #374151; font-size: 14px;">${caseItem.damagePercentage}% damage</span>
+                  </div>
+                ` : ''}
+              </div>
+              
+              <div style="
+                background: #f9fafb; 
+                padding: 12px; 
+                border-radius: 8px; 
+                margin-bottom: 12px;
+              ">
+                <div style="
+                  display: flex; 
+                  justify-content: space-between; 
+                  margin-bottom: 8px;
+                ">
+                  <span style="color: #6b7280; font-size: 14px;">Progress</span>
+                  <span style="color: #1f2937; font-weight: 600; font-size: 14px;">${caseItem.progress}%</span>
+                </div>
+                <div style="
+                  width: 100%; 
+                  height: 8px; 
+                  background: #e5e7eb; 
+                  border-radius: 4px; 
+                  overflow: hidden;
+                  margin-bottom: 8px;
+                ">
+                  <div style="
+                    width: ${caseItem.progress}%; 
+                    height: 100%; 
+                    background: ${caseItem.progress >= 100 ? '#10b981' : '#3b82f6'}; 
+                    transition: width 0.3s ease;
+                  "></div>
+                </div>
+                <div style="
+                  display: flex; 
+                  justify-content: space-between; 
+                  color: #6b7280; 
+                  font-size: 13px;
+                ">
+                  <span>${caseItem.raised} raised</span>
+                  <span>of ${caseItem.needed}</span>
+                </div>
+              </div>
+              
+              ${caseItem.progress < 100 ? `
+                <div style="text-align: center;">
+                  <button 
+                    onclick="window.parent.postMessage({type: 'donate', caseId: '${caseItem.caseId}'}, '*')"
+                    style="
+                      background: #3b82f6; 
+                      color: white; 
+                      border: none; 
+                      padding: 8px 16px; 
+                      border-radius: 6px; 
+                      font-size: 14px; 
+                      font-weight: 500; 
+                      cursor: pointer;
+                      transition: background 0.2s;
+                    "
+                    onmouseover="this.style.background='#2563eb'"
+                    onmouseout="this.style.background='#3b82f6'"
+                  >
+                    💖 Donate to Help
+                  </button>
+                </div>
+              ` : ''}
+            </div>
+          `;
+
+          infoWindowRef.current.setContent(contentString);
+          infoWindowRef.current.open(mapInstanceRef.current, marker);
+        });
+
+        markersRef.current.push(marker);
+      }
+    });
+
+    // Adjust map bounds to show all markers
+    if (markersRef.current.length > 0) {
+      const bounds = new window.google.maps.LatLngBounds();
+      markersRef.current.forEach(marker => {
+        bounds.extend(marker.getPosition());
+      });
+      
+      if (markersRef.current.length === 1) {
+        mapInstanceRef.current.setCenter(markersRef.current[0].getPosition());
+        mapInstanceRef.current.setZoom(13);
+      } else {
+        mapInstanceRef.current.fitBounds(bounds);
+        const currentZoom = mapInstanceRef.current.getZoom();
+        if (currentZoom > 12) {
+          mapInstanceRef.current.setZoom(12);
+        }
+      }
+    }
+  };
+
+  // Clear all markers from map
+  const clearMarkers = () => {
+    markersRef.current.forEach(marker => {
+      marker.setMap(null);
+    });
+    markersRef.current = [];
+  };
+
+  // Get approximate coordinates for villages (in a real app, store these in database)
+  const getVillageCoordinates = (village) => {
+    const villageCoords = {
+      // Tyre District
+      'Ain Baal': { lat: 33.2688, lng: 35.2044 },
+      'Adloun': { lat: 33.3567, lng: 35.2711 },
+      'Al-Bazouriye': { lat: 33.2722, lng: 35.2089 },
+      'Al-Mansouri': { lat: 33.2856, lng: 35.1589 },
+      'Bafliyeh': { lat: 33.2567, lng: 35.1678 },
+      'Tyre': { lat: 33.2704, lng: 35.2038 },
+      'Qana': { lat: 33.2044, lng: 35.3089 },
+      'Sreifa': { lat: 33.1889, lng: 35.2756 },
+      
+      // Sidon District
+      'Saida': { lat: 33.5633, lng: 35.3689 },
+      'Abra': { lat: 33.5278, lng: 35.3444 },
+      'Ein el-Delb': { lat: 33.5156, lng: 35.3833 },
+      
+      // Nabatieh District
+      'Nabatiye': { lat: 33.3789, lng: 35.4833 },
+      'Ansar': { lat: 33.3456, lng: 35.4278 },
+      'Arnoun': { lat: 33.3667, lng: 35.4556 },
+      'Harouf': { lat: 33.3233, lng: 35.4144 },
+      'Houla': { lat: 33.3089, lng: 35.4456 },
+      
+      // Bint Jbeil District
+      'Bint Jbeil': { lat: 33.1144, lng: 35.4278 },
+      'Aita al-Shaab': { lat: 33.1056, lng: 35.4144 },
+      'Maroun ar-Ras': { lat: 33.0944, lng: 35.4089 },
+      'Yaroun': { lat: 33.0778, lng: 35.4233 },
+      'Tebnine': { lat: 33.1333, lng: 35.4500 },
+      
+      // Marjayoun District
+      'Marjayoun': { lat: 33.3611, lng: 35.5889 },
+      'Kfar Kila': { lat: 33.1056, lng: 35.5644 },
+      'Odaisseh': { lat: 33.0944, lng: 35.6089 },
+      
+      // Jezzine District
+      'Jezzine': { lat: 33.5444, lng: 35.5833 },
+      'Kfarfalous': { lat: 33.5233, lng: 35.5456 }
+    };
+
+    // Try exact match first
+    if (villageCoords[village]) {
+      return villageCoords[village];
+    }
+
+    // Try partial match
+    const partialMatch = Object.keys(villageCoords).find(key => 
+      village.toLowerCase().includes(key.toLowerCase()) || 
+      key.toLowerCase().includes(village.toLowerCase())
+    );
+
+    if (partialMatch) {
+      return villageCoords[partialMatch];
+    }
+
+    // Default to South Lebanon center with slight random offset
+    return {
+      lat: 33.2774 + (Math.random() - 0.5) * 0.2,
+      lng: 35.2044 + (Math.random() - 0.5) * 0.2
+    };
+  };
+
+  // Listen for donate messages from info window
+  useEffect(() => {
+    const handleMessage = (event) => {
+      if (event.data.type === 'donate' && event.data.caseId) {
+        const caseItem = [...approvedCases, ...fullyFundedCases].find(c => c.caseId === event.data.caseId);
+        if (caseItem) {
+          const amount = prompt(`Enter donation amount for ${caseItem.family}:`);
+          if (amount && !isNaN(amount) && amount > 0) {
+            handleDonation(caseItem, amount);
+          }
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [approvedCases, fullyFundedCases]);
+
+  // Initialize map when tab changes to map and data is loaded
+  useEffect(() => {
+    if (activeTab === 'map' && isMapLoaded && approvedCases.length > 0) {
+      setTimeout(initializeMap, 100); // Small delay to ensure DOM is ready
+    }
+  }, [activeTab, isMapLoaded, approvedCases, fullyFundedCases]);
+
+  // Update markers when cases or filters change (only for Google Maps)
+  useEffect(() => {
+    if (activeTab === 'map' && mapInstanceRef.current && window.google) {
+      addMarkersToMap();
+    } else if (activeTab === 'map' && isMapLoaded && !window.google) {
+      // Re-initialize iframe map with updated data
+      initializeIframeMap();
+    }
+  }, [approvedCases, fullyFundedCases, selectedDistrict, selectedRegion]);
 
   const loadUserPreferences = () => {
     if (!user?.email) return;
@@ -127,7 +589,10 @@ const DonorDashboard = () => {
         destructionDate: caseItem.destructionDate,
         checkerComments: caseItem.checkerComments,
         hasDocuments: caseItem.hasDocuments,
-        documentCount: caseItem.documentCount
+        documentCount: caseItem.documentCount,
+        // Add coordinates if available from backend, otherwise will be generated
+        latitude: caseItem.latitude,
+        longitude: caseItem.longitude
       }));
 
       setApprovedCases(transformedCases);
@@ -200,7 +665,10 @@ const DonorDashboard = () => {
         destructionDate: caseItem.destructionDate,
         checkerComments: caseItem.checkerComments,
         hasDocuments: caseItem.hasDocuments,
-        documentCount: caseItem.documentCount
+        documentCount: caseItem.documentCount,
+        // Add coordinates if available from backend, otherwise will be generated
+        latitude: caseItem.latitude,
+        longitude: caseItem.longitude
       }));
 
       setFullyFundedCases(transformedCases);
@@ -293,7 +761,12 @@ const DonorDashboard = () => {
       // Refresh donation history and stats
       await loadUserDonationHistory();
 
-      toast.success(`Thank you for your donation of $${amount} to ${caseItem.family}! Your donation has been processed.`);
+      // Close info window after successful donation
+      if (infoWindowRef.current) {
+        infoWindowRef.current.close();
+      }
+
+      toast.success(`Thank you for your donation of ${amount} to ${caseItem.family}! Your donation has been processed.`);
     } catch (error) {
       console.error('Error processing donation:', error);
       
@@ -310,6 +783,77 @@ const DonorDashboard = () => {
       }
       
       toast.error(error.message || 'Error processing donation. Please try again.');
+    }
+  };
+
+  // New donation handlers for Visa and Wish
+  const handleVisaDonate = async (caseItem, amount) => {
+    if (!amount || amount <= 0) {
+      toast.error('Please enter a valid donation amount.');
+      return;
+    }
+
+    if (!currentUser) {
+      toast.error('Please log in to make a donation.');
+      return;
+    }
+
+    try {
+      console.log('💳 Processing Visa donation:', { caseId: caseItem.caseId, amount });
+      
+      // Show loading toast
+      toast.info('Processing Visa payment...');
+      
+      const donationData = {
+        caseId: caseItem.caseId,
+        amount: parseFloat(amount),
+        paymentMethod: 'visa',
+        anonymous: false,
+        message: `Visa donation from ${donorData.donorName}`
+      };
+
+      // Here you would integrate with Visa's payment API
+      // For now, we'll simulate the process
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API call
+      
+      const response = await ApiService.makeDonation(donationData);
+      
+      // Refresh data
+      await loadApprovedCases();
+      await loadFullyFundedCases();
+      await loadUserDonationHistory();
+
+      toast.success(`✅ Visa payment successful! Thank you for your ${amount} donation to ${caseItem.family}!`);
+    } catch (error) {
+      console.error('Error processing Visa donation:', error);
+      toast.error(error.message || 'Visa payment failed. Please try again.');
+    }
+  };
+
+  const handleWishDonate = (caseItem) => {
+    if (!currentUser) {
+      toast.error('Please log in to make a donation.');
+      return;
+    }
+
+    try {
+      // Generate a unique donation ID for the Wishmony redirect
+      const donationId = `${caseItem.caseId}-${Date.now()}`;
+      const wishmoneyUrl = `https://wishmony.com/donate/${donationId}`;
+      
+      console.log('🌟 Redirecting to Wishmony:', wishmoneyUrl);
+      
+      // Show info toast
+      toast.info('Redirecting to Wishmony for donation...');
+      
+      // Open Wishmony in a new tab
+      window.open(wishmoneyUrl, '_blank', 'noopener,noreferrer');
+      
+      // Optionally track the redirect in your analytics
+      console.log(`Wish donation redirect for case: ${caseItem.caseId}, family: ${caseItem.family}`);
+    } catch (error) {
+      console.error('Error redirecting to Wishmony:', error);
+      toast.error('Failed to redirect to Wishmony. Please try again.');
     }
   };
 
@@ -785,33 +1329,62 @@ const DonorDashboard = () => {
                     
                     <div className="case-actions">
                       {caseItem.progress < 100 ? (
-                        <div className="donation-input">
-                          <input
-                            type="number"
-                            placeholder="Amount ($)"
-                            min="1"
-                            max="10000"
-                            id={`donation-${caseItem.id}`}
-                          />
-                          <button 
-                            className="donate-btn"
-                            onClick={() => {
-                              const amount = document.getElementById(`donation-${caseItem.id}`).value;
-                              handleDonation(caseItem, amount);
-                              document.getElementById(`donation-${caseItem.id}`).value = '';
-                            }}
-                          >
-                            <i className="fas fa-heart"></i>
-                            Donate
-                          </button>
-                        </div>
+                        <>
+                          <div className="donation-input">
+                            <input
+                              type="number"
+                              placeholder="Amount ($)"
+                              min="1"
+                              max="10000"
+                              id={`donation-${caseItem.id}`}
+                            />
+                            <button 
+                              className="donate-btn"
+                              onClick={() => {
+                                const amount = document.getElementById(`donation-${caseItem.id}`).value;
+                                handleDonation(caseItem, amount);
+                                document.getElementById(`donation-${caseItem.id}`).value = '';
+                              }}
+                            >
+                              <i className="fas fa-heart"></i>
+                              Donate
+                            </button>
+                          </div>
+                          
+                          {/* New Donation Buttons */}
+                          <div className="new-donation-buttons">
+                            <button 
+                              className="visa-donate-btn"
+                              onClick={() => {
+                                const amount = document.getElementById(`donation-${caseItem.id}`).value;
+                                if (amount && amount > 0) {
+                                  handleVisaDonate(caseItem, amount);
+                                  document.getElementById(`donation-${caseItem.id}`).value = '';
+                                } else {
+                                  toast.warning('Please enter a donation amount first');
+                                }
+                              }}
+                            >
+                              <i className="fab fa-cc-visa"></i>
+                              Donate by Visa
+                            </button>
+                            
+                            <button 
+                              className="wish-donate-btn"
+                              onClick={() => handleWishDonate(caseItem)}
+                            >
+                              <i className="fas fa-star"></i>
+                              Donate by Wish
+                            </button>
+                          </div>
+                        </>
                       ) : (
                         <div className="fully-funded-message">
                           <i className="fas fa-heart"></i>
                           Goal Achieved!
                         </div>
                       )}
-                      <button className="view-btn">View Details</button>
+                    
                     </div>
                   </div>
                 ))}
@@ -888,50 +1461,99 @@ const DonorDashboard = () => {
               <div className="map-container">
                 <div className="map-header">
                   <h4>
-                    {selectedDistrict 
-                      ? `${selectedDistrict.name} - Interactive Map` 
-                      : 'South Lebanon Districts - Interactive Map'
-                    }
+                    Interactive Cases Map
+                    {selectedDistrict && ` - ${selectedDistrict.name}`}
                   </h4>
-                  {selectedDistrict && (
-                    <button className="clear-map-selection" onClick={clearDistrictSelection}>
-                      <i className="fas fa-times"></i> Show All Districts
-                    </button>
+                  <div className="map-controls">
+                    {selectedDistrict && (
+                      <button className="clear-map-selection" onClick={clearDistrictSelection}>
+                        <i className="fas fa-times"></i> Show All Districts
+                      </button>
+                    )}
+                    <div className="map-legend">
+                 
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="interactive-map-wrapper">
+                  <div 
+                    ref={mapRef}
+                    className="google-map"
+                    style={{
+                      width: '100%',
+                      height: '500px',
+                      borderRadius: '12px',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                      border: '1px solid #e5e7eb'
+                    }}
+                  />
+                  
+                  {!isMapLoaded && (
+                    <div className="map-loading-overlay">
+                      <div className="map-loading-content">
+                        <i className="fas fa-spinner fa-spin"></i>
+                        <p>Loading interactive map...</p>
+                      </div>
+                    </div>
                   )}
                 </div>
-                <div className="map-placeholder">
-                  <iframe
-                    src={selectedDistrict 
-                      ? `https://www.google.com/maps/embed/v1/place?key=YOUR_API_KEY&q=${encodeURIComponent(selectedDistrict.name + ', Lebanon')}&zoom=12`
-                      : "https://www.google.com/maps/embed/v1/place?key=YOUR_API_KEY&q=South+Governorate,+Lebanon&zoom=9"
-                    }
-                    width="100%"
-                    height="100%"
-                    style={{
-                      border: 0,
-                      minHeight: '400px',
-                      borderRadius: '12px',
-                      boxShadow: '0 2px 12px rgba(0, 0, 0, 0.1)',
-                    }}
-                    allowFullScreen=""
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    title={selectedDistrict ? `${selectedDistrict.name} District Map` : "South Lebanon Districts Map"}
-                  />
-                  <div className="map-overlay">
-                    <i className="fas fa-map-marked-alt"></i>
-                    <p>
-                      {selectedDistrict 
-                        ? `Showing ${selectedDistrict.name} with ${filteredCases.length} cases`
-                        : 'Interactive map of South Lebanon districts'
-                      }
-                    </p>
-                    <small>
-                      {selectedDistrict 
-                        ? `Villages: ${selectedDistrict.villages.slice(0, 3).join(', ')}${selectedDistrict.villages.length > 3 ? '...' : ''}`
-                        : 'Click on district cards to focus on specific areas'
-                      }
-                    </small>
+                
+                <div className="map-info-panel">
+                  <div className="map-stats">
+                    <div className="map-stat">
+                      <i className="fas fa-map-marker-alt"></i>
+                      <div>
+                        <span className="stat-number">
+                          {selectedDistrict ? filteredCases.length : [...approvedCases, ...fullyFundedCases].length}
+                        </span>
+                        <span className="stat-label">Cases on Map</span>
+                      </div>
+                    </div>
+                    <div className="map-stat">
+                      <i className="fas fa-heart"></i>
+                      <div>
+                        <span className="stat-number">
+                          {selectedDistrict 
+                            ? filteredCases.filter(c => c.progress < 100).length
+                            : [...approvedCases, ...fullyFundedCases].filter(c => c.progress < 100).length}
+                        </span>
+                        <span className="stat-label">Need Funding</span>
+                      </div>
+                    </div>
+                    <div className="map-stat">
+                      <i className="fas fa-check-circle"></i>
+                      <div>
+                        <span className="stat-number">
+                          {selectedDistrict 
+                            ? filteredCases.filter(c => c.progress >= 100).length
+                            : fullyFundedCases.length}
+                        </span>
+                        <span className="stat-label">Fully Funded</span>
+                      </div>
+                    </div>
+                    <div className="map-stat">
+                      <i className="fas fa-dollar-sign"></i>
+                      <div>
+                        <span className="stat-number">
+                          ${(selectedDistrict 
+                            ? filteredCases.reduce((sum, c) => sum + (c.totalDonations || 0), 0)
+                            : [...approvedCases, ...fullyFundedCases].reduce((sum, c) => sum + (c.totalDonations || 0), 0)
+                          ).toLocaleString()}
+                        </span>
+                        <span className="stat-label">Total Raised</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="map-instructions">
+                    <h5><i className="fas fa-info-circle"></i> How to Use the Map</h5>
+                    <ul>
+                      <li><strong>Red markers</strong> - Cases that need funding</li>
+                      <li><strong>Green markers</strong> - Fully funded cases</li>
+                      <li><strong>Click markers</strong> to view case details and donate</li>
+                      <li><strong>Use district cards</strong> above to filter by region</li>
+                    </ul>
                   </div>
                 </div>
                 
@@ -1125,7 +1747,6 @@ const DonorDashboard = () => {
                           <i className="fas fa-heart"></i>
                           Goal Achieved!
                         </div>
-                        <button className="view-btn">View Details</button>
                       </div>
                     </div>
                   ))}
@@ -1297,7 +1918,7 @@ const DonorDashboard = () => {
               onClick={() => handleTabChange('map')}
             >
               <i className="fas fa-map-marked-alt"></i>
-              Regional Map
+              Interactive Map
               {selectedDistrict && (
                 <span className="nav-indicator">
                   <i className="fas fa-dot-circle"></i>
