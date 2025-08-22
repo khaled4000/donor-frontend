@@ -31,7 +31,6 @@ Your frontend deployment at `https://donor-frontend1.onrender.com` is now succes
 The backend now allows requests from:
 - `http://localhost:5173` (Development)
 - `http://localhost:3000` (Alternative development)
-- `https://donor-frontend-jszc-git-master-khaled4000s-projects.vercel.app` (Vercel)
 - `https://donor-frontend1.onrender.com` (Render - **NEW**)
 - Environment variable `FRONTEND_URL` (Fallback)
 
