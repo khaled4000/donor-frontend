@@ -12,12 +12,12 @@ const configs = {
   },
   production: {
     API_BASE_URL: 'https://donor-backend-dxxd.onrender.com/api',
-    FRONTEND_URL: process.env.VITE_FRONTEND_URL || 'https://your-vercel-domain.vercel.app',
+    FRONTEND_URL: process.env.VITE_FRONTEND_URL || 'https://donor-frontend1.onrender.com',
     DEBUG_MODE: false,
   },
   staging: {
     API_BASE_URL: 'https://donor-backend-dxxd.onrender.com/api',
-    FRONTEND_URL: 'https://your-staging-domain.com',
+    FRONTEND_URL: 'https://donor-frontend1.onrender.com',
     DEBUG_MODE: true,
   }
 };
