@@ -12,12 +12,12 @@ const configs = {
   },
   production: {
     API_BASE_URL: 'https://donor-backend-dxxd.onrender.com/api',
-    FRONTEND_URL: process.env.VITE_FRONTEND_URL || 'https://donor-frontend1.onrender.com',
+    FRONTEND_URL: process.env.VITE_FRONTEND_URL || 'https://donor-project-frontend-3utdst4fo-khaled4000s-projects.vercel.app',
     DEBUG_MODE: false,
   },
   staging: {
     API_BASE_URL: 'https://donor-backend-dxxd.onrender.com/api',
-    FRONTEND_URL: 'https://donor-frontend1.onrender.com',
+    FRONTEND_URL: 'https://donor-project-frontend-3utdst4fo-khaled4000s-projects.vercel.app',
     DEBUG_MODE: true,
   }
 };
